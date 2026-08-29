@@ -168,6 +168,14 @@ input.err { border-color: var(--danger); }
 .qa-btn svg { color: var(--accent); margin-bottom: 6px; }
 .qa-btn div { font-size: 12.5px; font-weight: 700; }
 
+/* Sales trend mini chart */
+.trend-row { display: flex; align-items: flex-end; gap: 8px; height: 110px; }
+.trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+.trend-bar { width: 100%; max-width: 26px; border-radius: 5px 5px 2px 2px; background: var(--accent-soft); position: relative; min-height: 3px; transition: height 0.3s ease; }
+.trend-bar.today { background: var(--accent); }
+.trend-bar-label { font-size: 10px; color: var(--muted); font-weight: 700; }
+.trend-bar-amt { font-size: 9.5px; color: var(--muted-dim); font-family: 'JetBrains Mono', monospace; }
+
 /* Cart summary */
 .summary-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--muted); font-weight: 600; padding: 5px 0; }
 .summary-row.total { font-size: 18px; font-weight: 800; color: var(--ink); padding-top: 12px; margin-top: 6px; border-top: 1px solid var(--glass-border); }
@@ -332,8 +340,10 @@ input.err { border-color: var(--danger); }
     </div>
   </div>
 
-  <div class="section-label">Recent Invoices</div>
-  <div id="home-recent-invoices"></div>
+  <div class="section-label">Sales — Last 7 Days</div>
+  <div class="card" style="display:block;">
+    <div id="sales-trend-chart"></div>
+  </div>
 </div>
 
 <!-- ================= BILLING SCREEN ================= -->
@@ -579,6 +589,7 @@ input.err { border-color: var(--danger); }
       <h4>Data Management</h4>
       <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:10px;" onclick="exportBackup()">Export Backup (JSON)</button>
       <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:10px;" onclick="exportInventoryCSV()">Export Inventory (CSV)</button>
+      <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:10px;" onclick="exportInvoicesCSV()">Export Invoices (CSV)</button>
       <input type="file" id="import-input" accept="application/json" style="display:none;" onchange="importBackup(event)">
       <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:10px;" onclick="document.getElementById('import-input').click()">Import Backup</button>
       <button class="btn btn-danger-outline btn-sm" style="width:100%;" onclick="clearAllDataConfirm()">Clear All Data</button>
@@ -732,7 +743,15 @@ function escapeHtml(str) {
 }
 function fmtMoney(n) { return settings.currency + Number(n || 0).toFixed(2); }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
-function isSameDay(a, b) { return a.toDateString() === b.toDateString(); }
+function isSameDay(a, b) { return !isNaN(a) && !isNaN(b) && a.toDateString() === b.toDateString(); }
+// Invoice dates are stored as ISO strings (new Date().toISOString()) so date math
+// is reliable across locales. This formats them for display only.
+function fmtDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return String(iso || '');
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) +
+    ' · ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
 function daysUntil(dateStr) {
   if (!dateStr) return null;
   const d = new Date(dateStr + 'T00:00:00');
@@ -868,7 +887,7 @@ function pendingCount() {
 function updateSyncIndicator() {
   const online = navigator.onLine;
   const dots = [$('sync-dot'), $('settings-sync-dot')];
-  const label = pendingCount() > 0 ? (online ? 'Syncing…' : 'Offline — will sync') : (online ? 'Synced' : 'Offline');
+  const label = pendingCount() > 0 ? (online ? 'Syncing…' : 'Offline — will sync') : (online ? 'Live' : 'Offline');
   const cls = !online ? 'offline' : (pendingCount() > 0 ? 'pending' : '');
   dots.forEach(d => { if (d) d.className = 'sync-dot ' + cls; });
   if ($('sync-label')) $('sync-label').innerText = label;
@@ -907,8 +926,87 @@ async function loadCloudData() {
     console.error('loadCloudData(invoices) failed:', err);
     lastSyncError = err && err.message ? err.message : String(err);
   }
+  try {
+    const { data: setData, error: setErr } = await db.from('settings').select('*').eq('id', 1).maybeSingle();
+    if (setErr) throw setErr;
+    if (setData) { settings = { ...DEFAULT_SETTINGS, ...setData }; saveSettingsLocal(); applySettingsToUI(); }
+  } catch (err) {
+    console.error('loadCloudData(settings) failed:', err);
+  }
   updateSyncIndicator();
   renderUI();
+}
+
+/* =========================================
+   REALTIME — makes inventory, invoices and settings
+   live across every device connected to this pharmacy,
+   with no manual refresh needed.
+   ========================================= */
+function setupRealtime() {
+  db.channel('op-inventory')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, handleInventoryRealtime)
+    .subscribe();
+  db.channel('op-invoices')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, handleInvoiceRealtime)
+    .subscribe();
+  db.channel('op-settings')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, handleSettingsRealtime)
+    .subscribe();
+}
+function handleInventoryRealtime(payload) {
+  if (payload.eventType === 'DELETE') {
+    const barcode = payload.old && payload.old.barcode;
+    inventory = inventory.filter(i => i.barcode !== barcode);
+  } else {
+    const ci = payload.new;
+    const barcode = String(ci.barcode);
+    if (pending.inventory[barcode]) return; // we have an unsynced local edit — don't overwrite it
+    const item = { barcode, name: String(ci.name || ''), batch: String(ci.batch || ''), mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0 };
+    const idx = inventory.findIndex(i => i.barcode === barcode);
+    if (idx > -1) inventory[idx] = item; else inventory.push(item);
+  }
+  saveLocalInventory();
+  renderUI();
+}
+function handleInvoiceRealtime(payload) {
+  if (payload.eventType === 'DELETE') {
+    const id = payload.old && payload.old.id;
+    invoices = invoices.filter(i => i.id !== id);
+  } else {
+    const ci = payload.new;
+    if (pending.invoices[ci.id]) return;
+    const idx = invoices.findIndex(i => i.id === ci.id);
+    if (idx > -1) invoices[idx] = ci; else invoices.unshift(ci);
+    invoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }
+  saveLocalInvoices();
+  renderUI();
+}
+function handleSettingsRealtime(payload) {
+  if (payload.eventType === 'DELETE') return;
+  settings = { ...DEFAULT_SETTINGS, ...payload.new };
+  saveSettingsLocal();
+  applySettingsToUI();
+  toast('Pharmacy settings were updated', 'info', 2500);
+}
+function applySettingsToUI() {
+  $('brand-name').innerText = settings.bizName;
+  if ($('screen-settings').classList.contains('show')) populateSettingsForm();
+  renderUI();
+}
+async function syncSettingsToCloud() {
+  try {
+    const payload = { id: 1, ...settings };
+    delete payload.soundEnabled; // keep only fields relevant to the shared row; booleans stay per-device below
+    const { error } = await db.from('settings').upsert({
+      id: 1, bizName: settings.bizName, license: settings.license, gst: settings.gst, address: settings.address,
+      taxRate: settings.taxRate, currency: settings.currency, lowStockThreshold: settings.lowStockThreshold,
+      expiryWarningDays: settings.expiryWarningDays
+    }, { onConflict: 'id' });
+    if (error) throw error;
+  } catch (err) {
+    console.error('syncSettingsToCloud failed:', err);
+  }
 }
 
 // Merge cloud records without clobbering local changes that haven't synced yet.
@@ -1086,6 +1184,10 @@ function onScanSuccess(decodedText, target) {
   const now = Date.now();
   if (decodedText === lastScanCode && (now - lastScanTime) < 1600) return; // debounce duplicate reads
   lastScanCode = decodedText; lastScanTime = now;
+  // Stock scans are a single-item workflow — close the camera immediately so the
+  // pre-filled details form is visible right away instead of sitting hidden behind it.
+  // Billing stays open so multiple items can be scanned back-to-back into the cart.
+  if (target === 'stock') stopScanner();
   processBarcode(decodedText, target);
 }
 
@@ -1187,10 +1289,41 @@ function processBarcode(code, target) {
       $('st-mfg').value = ''; $('st-exp').value = '';
       $('st-qty').value = ''; $('st-price').value = '';
       $('btn-delete-stock').style.display = 'none';
+      lookupProductName(cleanCode);
     }
     updateExpHint();
     $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     $('st-name').focus();
+  }
+}
+
+/* =========================================
+   BARCODE → PRODUCT NAME LOOKUP (best-effort)
+   ========================================= */
+// Tries a public barcode database to auto-fill the product name for a new
+// barcode. Most Indian pharmaceutical (GS1) barcodes won't be listed in these
+// consumer/retail databases, so this fails silently and falls back to manual
+// entry — it's a convenience, not something to rely on.
+async function lookupProductName(barcode) {
+  const nameField = $('st-name');
+  const codeAtCallTime = barcode;
+  nameField.dataset.lookupPlaceholder = nameField.placeholder;
+  nameField.placeholder = 'Looking up product online…';
+  try {
+    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`);
+    if (res.ok) {
+      const data = await res.json();
+      const title = data && data.items && data.items[0] && data.items[0].title;
+      // Only apply if the user hasn't typed anything and hasn't scanned something else meanwhile
+      if (title && !nameField.value && $('st-code').value.trim() === codeAtCallTime) {
+        nameField.value = title;
+        toast('Product name auto-filled — please verify', 'info', 2800);
+      }
+    }
+  } catch (e) {
+    // Network/CORS/no-match — silent, manual entry remains the reliable path.
+  } finally {
+    if (nameField.dataset.lookupPlaceholder) nameField.placeholder = nameField.dataset.lookupPlaceholder;
   }
 }
 
@@ -1341,7 +1474,7 @@ async function generateInvoice() {
   savePending();
 
   const id = 'OP-' + Math.floor(100000 + Math.random() * 900000);
-  const date = new Date().toLocaleString();
+  const date = new Date().toISOString();
 
   const invoice = {
     id, date, customerName: custName, customerPhone: custPhone, items: [...cart],
@@ -1380,7 +1513,7 @@ function viewInvoice(id) {
   $('invoice-detail-view').style.display = 'block';
 
   $('det-id').innerText = '#' + inv.id;
-  $('det-date').innerText = inv.date;
+  $('det-date').innerText = fmtDate(inv.date);
   $('det-cust-name').innerText = inv.customerName;
   $('det-cust-phone').innerText = inv.customerPhone;
   $('det-pay').innerText = inv.paymentMethod || 'Cash';
@@ -1438,7 +1571,7 @@ function printPDF(inv) {
   $('print-address').innerText = settings.address || '';
   $('print-gst').innerText = settings.gst ? 'GSTIN: ' + settings.gst : '';
   $('print-id').innerText = inv.id;
-  $('print-date').innerText = inv.date;
+  $('print-date').innerText = fmtDate(inv.date);
   $('print-pay').innerText = 'Payment: ' + (inv.paymentMethod || 'Cash');
   $('print-cust-name').innerText = inv.customerName;
   $('print-cust-phone').innerText = inv.customerPhone;
@@ -1525,6 +1658,7 @@ function saveSettingsForm() {
   $('brand-name').innerText = settings.bizName;
   renderUI();
   toast('Settings saved', 'success');
+  syncSettingsToCloud();
 }
 
 function exportBackup() {
@@ -1549,6 +1683,23 @@ function exportInventoryCSV() {
   a.click();
   URL.revokeObjectURL(url);
   toast('Inventory CSV downloaded', 'success');
+}
+function exportInvoicesCSV() {
+  if (!invoices.length) { toast('No invoices to export', 'warn'); return; }
+  const header = ['Invoice ID', 'Date', 'Customer Name', 'Customer Phone', 'Payment Method', 'Subtotal', 'Discount', 'Tax', 'Total', 'Items'];
+  const rows = invoices.map(i => [
+    i.id, fmtDate(i.date), i.customerName, i.customerPhone, i.paymentMethod || 'Cash',
+    i.subtotal, i.discount, i.tax, i.total,
+    (i.items || []).map(it => `${it.name} x${it.qty}`).join('; ')
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `OnePharma_Invoices_${todayISO()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Invoices CSV downloaded', 'success');
 }
 function importBackup(e) {
   const file = e.target.files[0];
@@ -1615,16 +1766,36 @@ function renderDashboard() {
   }).length;
   $('stat-expiring').innerText = expCount;
 
-  const recent = invoices.slice(0, 5);
-  $('home-recent-invoices').innerHTML = recent.length ? recent.map(i => `
-    <div class="card clickable" onclick="switchTab('invoices'); setTimeout(()=>viewInvoice('${i.id}'), 50)">
-      <div class="card-col">
-        <div class="card-title">#${i.id}</div>
-        <div class="card-sub">${escapeHtml(i.customerName)} · ${i.date}</div>
-      </div>
-      <div class="price">${fmtMoney(i.total)}</div>
-    </div>
-  `).join('') : `<div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>No invoices yet today</p></div>`;
+  renderSalesTrend(now);
+}
+
+function renderSalesTrend(now) {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
+    days.push(d);
+  }
+  const totals = days.map(d => invoices.reduce((s, inv) => {
+    const invDate = new Date(inv.date);
+    return (!isNaN(invDate) && isSameDay(invDate, d)) ? s + inv.total : s;
+  }, 0));
+  const max = Math.max(...totals, 1);
+  const el = $('sales-trend-chart');
+  if (!el) return;
+  if (invoices.length === 0) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px;"><p>No sales yet — your first invoice will show up here.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="trend-row">${days.map((d, i) => {
+    const heightPct = Math.max((totals[i] / max) * 100, 2);
+    const isToday = isSameDay(d, now);
+    return `
+      <div class="trend-bar-wrap" title="${fmtMoney(totals[i])}">
+        <div class="trend-bar-amt">${totals[i] > 0 ? Math.round(totals[i]) : ''}</div>
+        <div class="trend-bar ${isToday ? 'today' : ''}" style="height:${heightPct}%;"></div>
+        <div class="trend-bar-label">${d.toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+      </div>`;
+  }).join('')}</div>`;
 }
 
 function renderUI() {
@@ -1699,7 +1870,7 @@ function renderUI() {
     <div class="card clickable" onclick="viewInvoice('${i.id}')">
       <div class="card-col">
         <div class="card-title">#${i.id}</div>
-        <div class="card-sub">${escapeHtml(i.customerName)} · ${i.date}</div>
+        <div class="card-sub">${escapeHtml(i.customerName)} · ${fmtDate(i.date)}</div>
       </div>
       <div class="price">${fmtMoney(i.total)}</div>
     </div>
@@ -1717,6 +1888,7 @@ $('brand-name').innerText = settings.bizName;
 renderUI();
 updateSyncIndicator();
 loadCloudData();
+setupRealtime();
 </script>
 </body>
 </html>
