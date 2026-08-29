@@ -183,11 +183,11 @@ input:focus { border-color: var(--accent); background: #fff; }
    DATABASE INTEGRATION (Supabase / Local)
    ========================================= */
 // TODO: Replace with your actual Supabase credentials when ready
-const SUPABASE_URL = 'https://https://xhlfhnzrslvfsunjmzkg.supabase.co';
+const SUPABASE_URL = 'https://xhlfhnzrslvfsunjmzkg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhobGZobnpyc2x2ZnN1bmptemtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMDU4OTYsImV4cCI6MjEwMzU4MTg5Nn0.ClMkaq8Runl7mKAH3mUplQwpvSQefgzlWIIBDv8_lJI';
 
-// Uncomment to initialize Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Changed variable name from 'supabase' to 'db' to prevent naming collisions
+// const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let inventory = JSON.parse(localStorage.getItem('op_inv')) || [];
 let invoices = JSON.parse(localStorage.getItem('op_invc')) || [];
@@ -195,13 +195,12 @@ let cart = [];
 
 // Async wrapper to easily swap to Supabase later
 async function syncData() {
-  upsert.setItem('op_inv', JSON.stringify(inventory));
-  upsert.setItem('op_invc', JSON.stringify(invoices));
+  localStorage.setItem('op_inv', JSON.stringify(inventory));
+  localStorage.setItem('op_invc', JSON.stringify(invoices));
   
-  Supabase implementation (Uncomment when ready)
-  await supabase.from('inventory').upsert(inventory);
-  await supabase.from('invoices').upsert(invoices);
-  
+  // Supabase implementation (Uncomment when ready)
+  // await db.from('inventory').upsert(inventory);
+  // await db.from('invoices').upsert(invoices);
   
   renderUI();
 }
@@ -287,7 +286,6 @@ async function processBarcode(code, target) {
       document.getElementById('st-price').value = existing.price;
     } else {
       document.getElementById('st-name').value = "Fetching...";
-      // Fetch from OpenFoodFacts (or replace with a pharma API)
       try {
         const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
         const data = await res.json();
@@ -340,12 +338,10 @@ async function generateInvoice() {
   cart = [];
   await syncData();
   
-  // Instantly generate and download PDF
   buildAndDownloadPDF(invoiceData);
 }
 
 function buildAndDownloadPDF(inv) {
-  // Populate Letterhead DOM
   document.getElementById('lh-id').innerText = inv.id;
   document.getElementById('lh-date').innerText = inv.date;
   document.getElementById('lh-total').innerText = inv.total.toFixed(2);
@@ -356,7 +352,7 @@ function buildAndDownloadPDF(inv) {
   ).join('');
 
   const element = document.getElementById('letterhead');
-  element.classList.add('print-mode'); // Make visible for capture
+  element.classList.add('print-mode');
 
   html2pdf().set({
     margin: 1,
@@ -365,13 +361,12 @@ function buildAndDownloadPDF(inv) {
     html2canvas: { scale: 2 },
     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
   }).from(element).save().then(() => {
-    element.classList.remove('print-mode'); // Hide again
+    element.classList.remove('print-mode'); 
     switchTab('invoices');
   });
 }
 
 function renderUI() {
-  // Render Cart
   const cartList = document.getElementById('cart-list');
   const cartSummary = document.getElementById('cart-summary');
   if (cart.length > 0) {
@@ -387,14 +382,12 @@ function renderUI() {
     cartSummary.style.display = 'none';
   }
 
-  // Render Stock
   document.getElementById('stock-list').innerHTML = inventory.map(i => `
     <div class="card">
       <div><div class="card-title">${i.name}</div><div class="card-sub">${i.barcode}</div></div>
       <div style="text-align:right;"><div class="price">₹${i.price}</div><div class="card-sub ${i.qty <= 5 ? 'text-danger' : ''}">Stock: ${i.qty}</div></div>
     </div>`).join('');
 
-  // Render Invoices
   document.getElementById('invoice-list').innerHTML = invoices.map(i => `
     <div class="card" style="cursor:pointer" onclick='buildAndDownloadPDF(${JSON.stringify(i)})'>
       <div><div class="card-title">#${i.id}</div><div class="card-sub">${i.date}</div></div>
@@ -402,7 +395,6 @@ function renderUI() {
     </div>`).join('');
 }
 
-// Initial render
 renderUI();
 </script>
 </body>
