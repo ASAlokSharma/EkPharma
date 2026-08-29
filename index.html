@@ -55,6 +55,14 @@ input:focus { border-color: var(--accent); background: #fff; }
 .card-sub { font-size: 13px; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 .price { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 
+/* Quantity Controls */
+.qty-stepper { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.btn-qty { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
+.btn-qty:active { background: var(--border); transform: scale(0.95); }
+.qty-input-inline { width: 50px; text-align: center; padding: 4px 6px; font-size: 14px; font-weight: 600; font-family: 'JetBrains Mono', monospace; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--ink); outline: none; }
+.qty-input-inline:focus { border-color: var(--accent); }
+.text-danger { color: var(--danger) !important; border-color: var(--danger) !important; }
+
 /* Bottom Nav */
 .nav { position: fixed; bottom: 0; width: 100%; background: #fff; border-top: 1px solid var(--border); display: flex; padding-bottom: var(--safe-bottom); z-index: 30; }
 .nav-item { flex: 1; padding: 12px 0; text-align: center; color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -67,9 +75,17 @@ input:focus { border-color: var(--accent); background: #fff; }
 .scanner-controls { padding: 20px; text-align: center; background: #000; }
 .scanner-controls button { background: #fff; color: #000; }
 
-/* Invoice Letterhead (Hidden until PDF generation) */
+/* Invoice Letterhead */
 #letterhead { background: #fff; padding: 40px; color: #000; display: none; font-family: 'Inter', sans-serif; }
-#letterhead.print-mode { display: block; position: absolute; top: -9999px; left: -9999px; width: 800px; }
+#letterhead.print-mode { 
+  display: block !important; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 790px; 
+  z-index: -9999; 
+  background: #ffffff;
+}
 .lh-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 20px; }
 .lh-title { font-size: 32px; font-weight: 700; color: #2563eb; }
 .lh-details { font-size: 14px; color: #4b5563; }
@@ -180,29 +196,70 @@ input:focus { border-color: var(--accent); background: #fff; }
 
 <script>
 /* =========================================
-   DATABASE INTEGRATION (Supabase / Local)
+   DATABASE INTEGRATION (Supabase Real-time Cloud)
    ========================================= */
-// TODO: Replace with your actual Supabase credentials when ready
 const SUPABASE_URL = 'https://xhlfhnzrslvfsunjmzkg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhobGZobnpyc2x2ZnN1bmptemtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMDU4OTYsImV4cCI6MjEwMzU4MTg5Nn0.ClMkaq8Runl7mKAH3mUplQwpvSQefgzlWIIBDv8_lJI';
 
-// Changed variable name from 'supabase' to 'db' to prevent naming collisions
-// const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let inventory = JSON.parse(localStorage.getItem('op_inv')) || [];
 let invoices = JSON.parse(localStorage.getItem('op_invc')) || [];
 let cart = [];
 
-// Async wrapper to easily swap to Supabase later
+// Fetch initial data from Supabase Cloud on launch
+async function loadCloudData() {
+  try {
+    const { data: invData, error: invErr } = await db.from('inventory').select('*');
+    if (invData && !invErr) {
+      inventory = invData;
+      localStorage.setItem('op_inv', JSON.stringify(inventory));
+    }
+
+    const { data: invcData, error: invcErr } = await db.from('invoices').select('*');
+    if (invcData && !invcErr) {
+      invoices = invcData;
+      localStorage.setItem('op_invc', JSON.stringify(invoices));
+    }
+  } catch (err) {
+    console.warn("Falling back to local storage:", err);
+  }
+  renderUI();
+}
+
+// Sync to local and push updates to Supabase
 async function syncData() {
   localStorage.setItem('op_inv', JSON.stringify(inventory));
   localStorage.setItem('op_invc', JSON.stringify(invoices));
   
-  // Supabase implementation (Uncomment when ready)
-  // await db.from('inventory').upsert(inventory);
-  // await db.from('invoices').upsert(invoices);
+  try {
+    if (inventory.length > 0) await db.from('inventory').upsert(inventory);
+    if (invoices.length > 0) await db.from('invoices').upsert(invoices);
+  } catch (err) {
+    console.error("Cloud sync failed:", err);
+  }
   
   renderUI();
+}
+
+/* =========================================
+   STOCK QUANTITY ADJUSTMENTS (+ / - / TYPE)
+   ========================================= */
+async function adjustStock(barcode, delta) {
+  const item = inventory.find(i => i.barcode === barcode);
+  if (item) {
+    item.qty = Math.max(0, item.qty + delta);
+    await syncData();
+  }
+}
+
+async function setStockQty(barcode, value) {
+  const item = inventory.find(i => i.barcode === barcode);
+  if (item) {
+    const parsed = parseInt(value, 10);
+    item.qty = isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    await syncData();
+  }
 }
 
 /* =========================================
@@ -213,10 +270,9 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById(`screen-${tab}`).classList.add('active');
   document.getElementById(`nav-${tab}`).classList.add('active');
-  renderUI();
+  loadCloudData();
 }
 
-// Generate a clean 'beep' using Web Audio API
 function playSuccessBeep() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = ctx.createOscillator();
@@ -306,7 +362,7 @@ async function saveStock() {
   const qty = parseInt(document.getElementById('st-qty').value);
   const price = parseFloat(document.getElementById('st-price').value);
   
-  if(!name || !qty || !price) return alert("Fill all fields");
+  if(!name || isNaN(qty) || isNaN(price)) return alert("Fill all fields correctly");
 
   const idx = inventory.findIndex(i => i.barcode === code);
   if (idx > -1) {
@@ -322,7 +378,6 @@ async function saveStock() {
 async function generateInvoice() {
   if (cart.length === 0) return;
   
-  // Deduct stock
   cart.forEach(cItem => {
     const invItem = inventory.find(i => i.barcode === cItem.barcode);
     if (invItem) invItem.qty -= cItem.qty;
@@ -354,19 +409,22 @@ function buildAndDownloadPDF(inv) {
   const element = document.getElementById('letterhead');
   element.classList.add('print-mode');
 
-  html2pdf().set({
-    margin: 1,
-    filename: `Invoice_${inv.id}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-  }).from(element).save().then(() => {
-    element.classList.remove('print-mode'); 
-    switchTab('invoices');
-  });
+  setTimeout(() => {
+    html2pdf().set({
+      margin: 0.4,
+      filename: `Invoice_${inv.id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, logging: false, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    }).from(element).save().then(() => {
+      element.classList.remove('print-mode'); 
+      switchTab('invoices');
+    });
+  }, 150);
 }
 
 function renderUI() {
+  // Render Cart
   const cartList = document.getElementById('cart-list');
   const cartSummary = document.getElementById('cart-summary');
   if (cart.length > 0) {
@@ -382,12 +440,24 @@ function renderUI() {
     cartSummary.style.display = 'none';
   }
 
+  // Render Stock with + / - & Direct Input
   document.getElementById('stock-list').innerHTML = inventory.map(i => `
     <div class="card">
-      <div><div class="card-title">${i.name}</div><div class="card-sub">${i.barcode}</div></div>
-      <div style="text-align:right;"><div class="price">₹${i.price}</div><div class="card-sub ${i.qty <= 5 ? 'text-danger' : ''}">Stock: ${i.qty}</div></div>
+      <div>
+        <div class="card-title">${i.name}</div>
+        <div class="card-sub">${i.barcode}</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end;">
+        <div class="price">₹${i.price}</div>
+        <div class="qty-stepper">
+          <button class="btn-qty" onclick="adjustStock('${i.barcode}', -1)">-</button>
+          <input type="number" class="qty-input-inline ${i.qty <= 5 ? 'text-danger' : ''}" value="${i.qty}" onchange="setStockQty('${i.barcode}', this.value)">
+          <button class="btn-qty" onclick="adjustStock('${i.barcode}', 1)">+</button>
+        </div>
+      </div>
     </div>`).join('');
 
+  // Render Invoices
   document.getElementById('invoice-list').innerHTML = invoices.map(i => `
     <div class="card" style="cursor:pointer" onclick='buildAndDownloadPDF(${JSON.stringify(i)})'>
       <div><div class="card-title">#${i.id}</div><div class="card-sub">${i.date}</div></div>
@@ -395,7 +465,8 @@ function renderUI() {
     </div>`).join('');
 }
 
-renderUI();
+// Initial fetch from cloud
+loadCloudData();
 </script>
 </body>
 </html>
