@@ -3,166 +3,376 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#09090b">
+<meta name="theme-color" content="#08090b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>OnePharma Enterprise</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Crect width='24' height='24' rx='6'/%3E%3Cpath fill='%23fff' d='M11 6h2v5h5v2h-5v5h-2v-5H6v-2h5z'/%3E%3C/svg%3E">
 
 <!-- Fonts & External Libraries -->
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root[data-theme="dark"] {
-  --bg: #09090b;
-  --surface: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --ink: #f8fafc;
-  --muted: #94a3b8;
+  --bg: #08090b;
+  --bg-elev: #0f1013;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-solid: #131417;
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --ink: #f4f5f7;
+  --muted: #8b93a1;
+  --muted-dim: #5b6270;
   --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --danger: #ef4444;
-  --danger-glass: rgba(239, 68, 68, 0.15);
-  --ok: #10b981;
-  --input-bg: rgba(0, 0, 0, 0.3);
-  --nav-bg: rgba(9, 9, 11, 0.9);
+  --accent-hover: #2f6fe0;
+  --accent-soft: rgba(59, 130, 246, 0.14);
+  --danger: #f0525c;
+  --danger-soft: rgba(240, 82, 92, 0.14);
+  --warn: #f5a623;
+  --warn-soft: rgba(245, 166, 35, 0.14);
+  --ok: #22c55e;
+  --ok-soft: rgba(34, 197, 94, 0.14);
+  --input-bg: rgba(0, 0, 0, 0.28);
+  --nav-bg: rgba(9, 9, 11, 0.92);
+  --shadow: 0 8px 24px rgba(0,0,0,0.35);
 }
 
 :root[data-theme="light"] {
-  --bg: #f8fafc;
+  --bg: #f4f5f7;
+  --bg-elev: #ffffff;
   --surface: #ffffff;
-  --glass-border: #e2e8f0;
-  --ink: #0f172a;
-  --muted: #64748b;
+  --surface-solid: #ffffff;
+  --glass-border: #e4e7ec;
+  --ink: #14161a;
+  --muted: #667085;
+  --muted-dim: #98a2b3;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
+  --accent-soft: #e8f0fe;
   --danger: #dc2626;
-  --danger-glass: #fef2f2;
+  --danger-soft: #fef2f2;
+  --warn: #d97706;
+  --warn-soft: #fffbeb;
   --ok: #059669;
-  --input-bg: #f1f5f9;
-  --nav-bg: rgba(255, 255, 255, 0.9);
+  --ok-soft: #ecfdf5;
+  --input-bg: #f1f3f6;
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --shadow: 0 8px 24px rgba(20,22,26,0.08);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Figtree', sans-serif; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--ink); font-size: 15px; overscroll-behavior-y: none; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transition: background 0.3s, color 0.3s; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font-size: 15px; overscroll-behavior-y: none; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transition: background 0.25s, color 0.25s; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+::selection { background: var(--accent-soft); }
+button { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Offline banner */
+#offline-banner { display: none; position: sticky; top: 0; z-index: 25; background: var(--warn); color: #1a1300; font-weight: 700; font-size: 12.5px; text-align: center; padding: 7px; letter-spacing: 0.2px; }
+#offline-banner.show { display: block; }
 
 /* App Bar */
-.appbar { position: sticky; top: 0; z-index: 20; background: var(--nav-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
-.brand-container { display: flex; align-items: center; gap: 10px; }
-.brand-logo { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; display: none; border: 1px solid var(--glass-border); }
-.brand { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; background: linear-gradient(90deg, #60a5fa, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.header-actions { display: flex; align-items: center; gap: 8px; }
+.appbar { position: sticky; top: 0; z-index: 20; background: var(--nav-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 12px 18px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+.brand-container { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-logo { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; display: none; border: 1px solid var(--glass-border); flex-shrink: 0; }
+.brand-wrap { min-width: 0; }
+.brand { font-weight: 800; font-size: 18px; letter-spacing: -0.4px; background: linear-gradient(90deg, #60a5fa, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-tag { font-size: 10.5px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex-shrink: 0; }
+.sync-dot.pending { background: var(--warn); animation: pulse 1.4s infinite; }
+.sync-dot.offline { background: var(--muted-dim); }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
 /* Icon Buttons */
-.btn-icon { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--surface); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-.btn-icon:active { transform: scale(0.95); }
+.btn-icon { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--surface); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s; position: relative; }
+.btn-icon:active { transform: scale(0.93); }
+.btn-icon.warn-dot::after { content:''; position:absolute; top:6px; right:6px; width:7px; height:7px; border-radius:50%; background: var(--warn); border: 1.5px solid var(--nav-bg); }
 
 /* Screens */
-.screen { display: none; padding: 20px; animation: fade 0.25s ease; }
+.screen { display: none; padding: 18px; animation: fade 0.22s ease; max-width: 640px; margin: 0 auto; }
 .screen.active { display: block; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-h2 { font-weight: 700; font-size: 24px; margin-bottom: 4px; letter-spacing: -0.5px; }
-p.sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+h2 { font-weight: 800; font-size: 23px; margin-bottom: 4px; letter-spacing: -0.5px; }
+p.sub { color: var(--muted); font-size: 13.5px; margin-bottom: 18px; font-weight: 500; }
+.section-label { margin: 22px 0 10px; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
 
 /* Buttons & Inputs */
-.btn { border: none; border-radius: 12px; font-weight: 600; padding: 14px; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 15px; transition: all 0.2s; }
+.btn { border: none; border-radius: 12px; font-weight: 700; padding: 14px; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 14.5px; transition: all 0.15s; }
 .btn:active { transform: scale(0.98); }
-.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28); }
+.btn-primary:hover { background: var(--accent-hover); }
 .btn-outline { background: var(--surface); border: 1px solid var(--glass-border); color: var(--ink); }
+.btn-danger-outline { background: var(--danger-soft); border: 1px solid transparent; color: var(--danger); }
+.btn-sm { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 10px; }
+.btn-row { display: flex; gap: 10px; }
+.btn-row > .btn { flex: 1; }
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .input-group { margin-bottom: 14px; }
 .input-group label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--input-bg); font-size: 15px; color: var(--ink); outline: none; font-weight: 500; }
-input:focus { border-color: var(--accent); }
+.hint { font-size: 11.5px; color: var(--muted-dim); margin-top: 5px; }
+input, select, textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--input-bg); font-size: 15px; color: var(--ink); outline: none; font-weight: 500; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input.err { border-color: var(--danger); }
+.err-msg { color: var(--danger); font-size: 12px; margin-top: 5px; font-weight: 600; display:none; }
+.search-wrap { position: relative; }
+.search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted-dim); pointer-events: none; }
+.search-wrap input { padding-left: 40px; }
+
+/* Chips */
+.chip-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; -ms-overflow-style: none; scrollbar-width: none; }
+.chip-row::-webkit-scrollbar { display: none; }
+.chip { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--glass-border); font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; transition: 0.15s; }
+.chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* Cards */
-.card { background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-.card-col { display: flex; flex-direction: column; gap: 4px; }
-.card-title { font-weight: 700; font-size: 15px; }
-.card-sub { font-size: 13px; color: var(--muted); font-weight: 500; }
-.badge { display: inline-block; padding: 2px 6px; background: var(--glass-border); border-radius: 4px; font-size: 11px; margin-right: 4px; }
+.card { background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 15px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; position: relative; overflow: hidden; transition: 0.15s; }
+.card.status-strip::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--ok); }
+.card.status-warn::before { background: var(--warn); }
+.card.status-danger::before { background: var(--danger); }
+.card.clickable { cursor: pointer; }
+.card.clickable:active { transform: scale(0.99); }
+.card-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.card-title { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-sub { font-size: 12.5px; color: var(--muted); font-weight: 500; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.badge { display: inline-block; padding: 3px 7px; background: var(--glass-border); border-radius: 5px; font-size: 10.5px; font-weight: 700; }
+.badge-ok { background: var(--ok-soft); color: var(--ok); }
+.badge-warn { background: var(--warn-soft); color: var(--warn); }
+.badge-danger { background: var(--danger-soft); color: var(--danger); }
 .price { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; color: var(--ok); }
+.empty-state { text-align: center; padding: 46px 20px; color: var(--muted); }
+.empty-state svg { opacity: 0.35; margin-bottom: 12px; }
+.empty-state p { font-size: 13.5px; font-weight: 600; }
 
 /* Stepper Controls */
-.qty-stepper { display: flex; align-items: center; gap: 6px; background: var(--input-bg); padding: 4px; border-radius: 8px; border: 1px solid var(--glass-border); }
-.btn-qty { width: 30px; height: 30px; border-radius: 6px; border: none; background: var(--surface); color: var(--ink); font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.btn-del { color: var(--danger); background: var(--danger-glass); }
-.qty-input-inline { width: 40px; text-align: center; padding: 0; font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; border: none; background: transparent; color: var(--ink); outline: none; }
+.qty-stepper { display: flex; align-items: center; gap: 6px; background: var(--input-bg); padding: 4px; border-radius: 8px; border: 1px solid var(--glass-border); flex-shrink: 0; }
+.btn-qty { width: 28px; height: 28px; border-radius: 6px; border: none; background: var(--surface); color: var(--ink); font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.btn-qty:active { transform: scale(0.9); }
+.btn-del { color: var(--danger); background: var(--danger-soft); }
+.qty-input-inline { width: 34px; text-align: center; padding: 0; font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+/* Dashboard */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+.stat-card { background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 15px; }
+.stat-card .stat-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.stat-card .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; }
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0; }
+.qa-btn { background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px 12px; text-align: center; cursor: pointer; transition: 0.15s; }
+.qa-btn:active { transform: scale(0.97); }
+.qa-btn svg { color: var(--accent); margin-bottom: 6px; }
+.qa-btn div { font-size: 12.5px; font-weight: 700; }
+
+/* Cart summary */
+.summary-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--muted); font-weight: 600; padding: 5px 0; }
+.summary-row.total { font-size: 18px; font-weight: 800; color: var(--ink); padding-top: 12px; margin-top: 6px; border-top: 1px solid var(--glass-border); }
+.pay-row { display: flex; gap: 8px; margin: 12px 0; }
+.pay-chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--glass-border); font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--muted); }
+.pay-chip.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 
 /* Bottom Navigation */
 .nav { position: fixed; bottom: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--glass-border); display: flex; padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 30; }
-.nav-item { flex: 1; padding: 14px 0; text-align: center; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.nav-item { flex: 1; padding: 12px 0 10px; text-align: center; color: var(--muted); cursor: pointer; font-size: 10.5px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.15s; }
 .nav-item.active { color: var(--accent); }
-.nav-item svg { width: 22px; height: 22px; }
+.nav-item svg { width: 21px; height: 21px; }
 
 /* Invoice Details View */
 #invoice-detail-view { display: none; }
 .detail-header { background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
-.detail-table { width: 100%; margin-top: 14px; border-collapse: collapse; font-size: 14px; }
-.detail-table th { text-align: left; padding-bottom: 8px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--glass-border); }
+.detail-table { width: 100%; margin-top: 14px; border-collapse: collapse; font-size: 13.5px; }
+.detail-table th { text-align: left; padding-bottom: 8px; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--glass-border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
 .detail-table td { padding: 10px 0; border-bottom: 1px solid var(--glass-border); }
 
 /* Scanner Overlay */
 #scanner-container { position: fixed; inset: 0; background: #000; z-index: 50; display: none; flex-direction: column; }
-#reader { flex: 1; width: 100%; display: flex; align-items: center; }
-.scanner-controls { padding: 24px; text-align: center; background: #000; }
+#reader { flex: 1; width: 100%; display: flex; align-items: center; position: relative; }
+.scanner-topbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
+.scanner-topbar .btn-icon { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.15); color: #fff; }
+.scanner-hint { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.8); font-size: 13px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.6); pointer-events: none; }
+.scanner-controls { padding: 18px 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: #000; display: flex; flex-direction: column; gap: 10px; }
+.scanner-manual { display: flex; gap: 8px; }
+.scanner-manual input { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: #fff; }
+.scanner-error { display: none; color: #fecaca; background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.3); padding: 10px 12px; border-radius: 10px; font-size: 12.5px; margin: 0 20px 12px; text-align: center; }
+
+/* Toasts */
+#toast-container { position: fixed; left: 0; right: 0; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 80; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; padding: 0 16px; }
+.toast { pointer-events: auto; max-width: 420px; width: 100%; background: var(--surface-solid); border: 1px solid var(--glass-border); box-shadow: var(--shadow); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; animation: toastIn 0.22s ease; }
+@keyframes toastIn { from { opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
+.toast .icon { width: 20px; height: 20px; flex-shrink: 0; display:flex; }
+.toast.success .icon { color: var(--ok); }
+.toast.error .icon { color: var(--danger); }
+.toast.info .icon { color: var(--accent); }
+.toast.warn .icon { color: var(--warn); }
+
+/* Modal */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 70; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(3px); }
+.modal-backdrop.show { display: flex; }
+.modal-sheet { background: var(--surface-solid); border-radius: 20px 20px 0 0; padding: 22px 20px calc(22px + env(safe-area-inset-bottom, 0px)); width: 100%; max-width: 480px; animation: sheetUp 0.25s ease; border: 1px solid var(--glass-border); border-bottom: none; }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-sheet h3 { font-size: 17px; margin-bottom: 8px; }
+.modal-sheet p { color: var(--muted); font-size: 13.5px; margin-bottom: 18px; line-height: 1.5; }
+@media (min-width: 560px) {
+  .modal-backdrop { align-items: center; }
+  .modal-sheet { border-radius: 18px; border-bottom: 1px solid var(--glass-border); }
+}
+
+/* Settings screen (overlay) */
+#screen-settings { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 40; overflow-y: auto; padding-bottom: 40px; }
+#screen-settings.show { display: block; }
+.settings-topbar { position: sticky; top: 0; background: var(--nav-bg); backdrop-filter: blur(14px); padding: 14px 18px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 12px; z-index: 2; }
+.settings-topbar h2 { font-size: 18px; margin: 0; }
+.settings-body { padding: 18px; max-width: 560px; margin: 0 auto; }
+.settings-group { background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+.settings-group h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 14px; font-weight: 700; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+.toggle-row .lbl { font-weight: 600; font-size: 14px; }
+.toggle-row .desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider-track { position: absolute; cursor: pointer; inset: 0; background: var(--glass-border); border-radius: 20px; transition: 0.2s; }
+.slider-track::before { content: ''; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+.switch input:checked + .slider-track { background: var(--accent); }
+.switch input:checked + .slider-track::before { transform: translateX(18px); }
+.logo-preview-row { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.logo-preview-box { width: 56px; height: 56px; border-radius: 12px; background: var(--input-bg); border: 1px dashed var(--glass-border); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.logo-preview-box img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Hidden Printable Invoice */
 #print-container { position: absolute; top: -9999px; left: -9999px; width: 750px; background: #ffffff; color: #000000; padding: 36px; font-family: 'Figtree', sans-serif; }
 .lh-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px; }
-.lh-brand { font-size: 28px; font-weight: 800; color: #1e3a8a; }
-.lh-logo { width: 60px; height: 60px; object-fit: contain; }
+.lh-brand { font-size: 26px; font-weight: 800; color: #1e3a8a; }
+.lh-meta { font-size: 11.5px; color: #64748b; margin-top: 2px; line-height: 1.5; }
+.lh-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; }
 .lh-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-.lh-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; text-transform: uppercase; color: #475569; }
-.lh-table td { border-bottom: 1px solid #e2e8f0; padding: 10px; font-size: 13px; color: #0f172a; }
+.lh-table th { background: #f1f5f9; padding: 9px 10px; text-align: left; font-size: 11px; text-transform: uppercase; color: #475569; }
+.lh-table td { border-bottom: 1px solid #e2e8f0; padding: 9px 10px; font-size: 12.5px; color: #0f172a; }
+.lh-totals { margin-top: 16px; margin-left: auto; width: 260px; }
+.lh-totals-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; color: #334155; }
+.lh-totals-row.grand { font-size: 18px; font-weight: 800; color: #0f172a; border-top: 2px solid #1e3a8a; padding-top: 10px; margin-top: 6px; }
+
+@media print { .nav, .appbar { display: none !important; } }
 </style>
 </head>
 <body>
 
+<div id="offline-banner">You're offline — changes are saved on this device and will sync automatically</div>
+
 <div class="appbar">
   <div class="brand-container">
     <img id="app-logo" class="brand-logo" alt="Logo">
-    <div class="brand">OnePharma</div>
+    <div class="brand-wrap">
+      <div class="brand" id="brand-name">OnePharma</div>
+      <div class="brand-tag"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Synced</span></div>
+    </div>
   </div>
   <div class="header-actions">
-    <input type="file" id="logo-input" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
-    <button class="btn-icon" onclick="document.getElementById('logo-input').click()" title="Upload Logo">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-    </button>
-    <button class="btn-icon" onclick="toggleTheme()" title="Toggle Theme">
+    <button class="btn-icon" onclick="toggleTheme()" title="Toggle Theme" aria-label="Toggle theme">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    </button>
+    <button class="btn-icon" id="settings-btn" onclick="openSettings()" title="Settings" aria-label="Settings">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
     </button>
   </div>
 </div>
 
+<!-- ================= DASHBOARD SCREEN ================= -->
+<div id="screen-home" class="screen active">
+  <h2>Dashboard</h2>
+  <p class="sub" id="home-date-sub">Here's what's happening today.</p>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2"></path><circle cx="12" cy="12" r="9" stroke-width="2"/></svg>
+        Today's Sales
+      </div>
+      <div class="stat-value" id="stat-today-sales">₹0.00</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+        Inventory Value
+      </div>
+      <div class="stat-value" id="stat-inv-value">₹0.00</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path></svg>
+        Low Stock
+      </div>
+      <div class="stat-value" id="stat-low-stock" style="color:var(--warn);">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Expiring Soon
+      </div>
+      <div class="stat-value" id="stat-expiring" style="color:var(--danger);">0</div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <div class="qa-btn" onclick="switchTab('bill')">
+      <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+      <div>New Bill</div>
+    </div>
+    <div class="qa-btn" onclick="switchTab('stock'); setTimeout(()=>startScanner('stock'), 250)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+      <div>Add Stock</div>
+    </div>
+  </div>
+
+  <div class="section-label">Recent Invoices</div>
+  <div id="home-recent-invoices"></div>
+</div>
+
 <!-- ================= BILLING SCREEN ================= -->
-<div id="screen-bill" class="screen active">
+<div id="screen-bill" class="screen">
   <h2>Billing</h2>
   <p class="sub">Scan medicines or add manually to cart.</p>
-  
+
   <div class="form-grid">
     <div class="input-group" style="margin-bottom:0;"><input type="text" id="cust-name" placeholder="Customer Name"></div>
-    <div class="input-group" style="margin-bottom:0;"><input type="tel" id="cust-phone" placeholder="Phone Number"></div>
+    <div class="input-group" style="margin-bottom:0;"><input type="tel" id="cust-phone" placeholder="Phone Number" inputmode="numeric"></div>
   </div>
 
   <button class="btn btn-primary" onclick="startScanner('bill')" style="margin: 14px 0;">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
     Scan Barcode
   </button>
-  
+
   <div class="input-group">
     <input type="text" id="manual-bill" placeholder="Or enter barcode manually..." onkeypress="if(event.key === 'Enter') handleManual('bill')">
   </div>
 
-  <h3 style="margin: 20px 0 10px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Cart Items</h3>
+  <div class="section-label">Cart Items <span id="cart-count" class="badge"></span></div>
   <div id="cart-list"></div>
-  
-  <div id="cart-summary" style="display:none; margin-top: 20px; background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px;">
-    <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; margin-bottom: 16px;">
-      <span>Total Amount</span> <span id="cart-total" class="price">₹0.00</span>
+
+  <div id="cart-summary" style="display:none; margin-top: 16px; background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px;">
+    <div class="input-group" style="margin-bottom:10px;">
+      <label>Discount (₹)</label>
+      <input type="number" id="cart-discount" min="0" step="0.01" placeholder="0.00" oninput="renderUI()">
     </div>
-    <button class="btn btn-primary" onclick="generateInvoice()">Complete & Checkout</button>
+    <div class="pay-row" id="pay-row">
+      <div class="pay-chip active" data-pay="Cash" onclick="setPaymentMethod('Cash')">Cash</div>
+      <div class="pay-chip" data-pay="Card" onclick="setPaymentMethod('Card')">Card</div>
+      <div class="pay-chip" data-pay="UPI" onclick="setPaymentMethod('UPI')">UPI</div>
+    </div>
+    <div class="summary-row"><span>Subtotal</span><span id="sum-subtotal" class="mono">₹0.00</span></div>
+    <div class="summary-row"><span>Discount</span><span id="sum-discount" class="mono">-₹0.00</span></div>
+    <div class="summary-row" id="sum-tax-row"><span id="sum-tax-label">Tax</span><span id="sum-tax" class="mono">₹0.00</span></div>
+    <div class="summary-row total"><span>Total Amount</span><span id="cart-total" class="price">₹0.00</span></div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="clearCart()" style="flex:0 0 auto; width:auto; padding:14px 16px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+      </button>
+      <button class="btn btn-primary" onclick="generateInvoice()">Complete & Checkout</button>
+    </div>
   </div>
 </div>
 
@@ -170,32 +380,74 @@ input:focus { border-color: var(--accent); }
 <div id="screen-stock" class="screen">
   <h2>Inventory</h2>
   <p class="sub">Add and manage medical inventory.</p>
-  
-  <button class="btn btn-primary" onclick="startScanner('stock')">Scan Barcode to Add/Edit</button>
-  
-  <div class="input-group" style="margin-top: 14px;">
-    <input type="text" id="manual-stock" placeholder="Or enter barcode manually..." onkeypress="if(event.key === 'Enter') handleManual('stock')">
-  </div>
-  
-  <div id="add-stock-form" style="display:none; margin-top: 16px; background: var(--surface); padding: 16px; border-radius: 14px; border: 1px solid var(--glass-border);">
-    <h3 style="margin-bottom:12px; font-size:16px;">Medicine Details</h3>
-    <div class="input-group"><label>Barcode</label><input type="text" id="st-code" readonly></div>
-    <div class="input-group"><label>Medicine Name</label><input type="text" id="st-name" placeholder="e.g. Paracetamol 500mg"></div>
-    <div class="input-group"><label>Batch Number</label><input type="text" id="st-batch" placeholder="e.g. BATCH-102"></div>
-    
-    <div class="form-grid">
-      <div class="input-group"><label>Mfg Date</label><input type="date" id="st-mfg"></div>
-      <div class="input-group"><label>Expiry Date</label><input type="date" id="st-exp"></div>
-    </div>
-    
-    <div class="form-grid">
-      <div class="input-group"><label>Quantity</label><input type="number" id="st-qty" min="0" placeholder="0"></div>
-      <div class="input-group"><label>Price (₹)</label><input type="number" id="st-price" step="0.01" placeholder="0.00"></div>
-    </div>
-    <button class="btn btn-primary" onclick="saveStock()">Save to Inventory</button>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startScanner('stock')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="17" height="17"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+      Scan Barcode
+    </button>
+    <button class="btn btn-outline" style="flex:0 0 auto; width:auto; padding:14px 16px;" onclick="openAddStockForm()" title="Add new item">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    </button>
   </div>
 
-  <h3 style="margin: 20px 0 10px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Current Stock</h3>
+  <div class="input-group" style="margin-top: 12px;">
+    <input type="text" id="manual-stock" placeholder="Or enter barcode manually..." onkeypress="if(event.key === 'Enter') handleManual('stock')">
+  </div>
+
+  <div id="add-stock-form" style="display:none; margin-top: 16px; background: var(--surface); padding: 16px; border-radius: 14px; border: 1px solid var(--glass-border);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:16px;" id="stock-form-title">Medicine Details</h3>
+      <button class="btn-icon" style="width:30px;height:30px;" onclick="closeStockForm()" aria-label="Close">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div class="input-group"><label>Barcode</label><input type="text" id="st-code" placeholder="Scan or type barcode"></div>
+    <div class="input-group">
+      <label>Medicine Name</label>
+      <input type="text" id="st-name" placeholder="e.g. Paracetamol 500mg">
+      <div class="err-msg" id="err-st-name">Medicine name is required.</div>
+    </div>
+    <div class="input-group"><label>Batch Number</label><input type="text" id="st-batch" placeholder="e.g. BATCH-102"></div>
+
+    <div class="form-grid">
+      <div class="input-group" style="margin-bottom:0;"><label>Mfg Date</label><input type="date" id="st-mfg"></div>
+      <div class="input-group" style="margin-bottom:0;"><label>Expiry Date</label><input type="date" id="st-exp"></div>
+    </div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:14px;" id="exp-hint"></div>
+
+    <div class="form-grid">
+      <div class="input-group" style="margin-bottom:0;">
+        <label>Quantity</label>
+        <input type="number" id="st-qty" min="0" placeholder="0">
+        <div class="err-msg" id="err-st-qty">Enter a valid quantity.</div>
+      </div>
+      <div class="input-group" style="margin-bottom:0;">
+        <label>Price (₹)</label>
+        <input type="number" id="st-price" step="0.01" min="0" placeholder="0.00">
+        <div class="err-msg" id="err-st-price">Enter a valid price.</div>
+      </div>
+    </div>
+    <div style="height:14px;"></div>
+    <div class="btn-row">
+      <button class="btn btn-danger-outline" style="flex:0 0 auto; width:auto; padding:14px 16px; display:none;" id="btn-delete-stock" onclick="deleteStockConfirm()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+      </button>
+      <button class="btn btn-primary" onclick="saveStock()">Save to Inventory</button>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:20px;">Current Stock</div>
+  <div class="search-wrap" style="margin-bottom:10px;">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"></path></svg>
+    <input type="text" id="stock-search" placeholder="Search by name, barcode or batch..." oninput="renderUI()">
+  </div>
+  <div class="chip-row" style="margin-bottom:14px;">
+    <div class="chip active" data-filter="all" onclick="setStockFilter('all')">All</div>
+    <div class="chip" data-filter="low" onclick="setStockFilter('low')">Low Stock</div>
+    <div class="chip" data-filter="expiring" onclick="setStockFilter('expiring')">Expiring Soon</div>
+    <div class="chip" data-filter="expired" onclick="setStockFilter('expired')">Expired</div>
+  </div>
   <div id="stock-list"></div>
 </div>
 
@@ -204,14 +456,23 @@ input:focus { border-color: var(--accent); }
   <div id="invoice-list-view">
     <h2>Invoices</h2>
     <p class="sub">View completed transactions and print receipts.</p>
+    <div class="search-wrap" style="margin-bottom:14px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"></path></svg>
+      <input type="text" id="invoice-search" placeholder="Search by name, phone or invoice ID..." oninput="renderUI()">
+    </div>
     <div id="invoice-list"></div>
   </div>
 
   <div id="invoice-detail-view">
-    <button class="btn btn-outline" style="width: auto; padding: 6px 14px; margin-bottom: 16px; font-size: 13px;" onclick="hideInvoiceDetail()">← Back</button>
+    <button class="btn btn-outline btn-sm" style="margin-bottom: 16px;" onclick="hideInvoiceDetail()">← Back</button>
     <div class="detail-header">
-      <h3 style="font-size: 20px;" id="det-id"></h3>
-      <p style="color: var(--muted); font-size: 13px; margin-bottom: 12px;" id="det-date"></p>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <h3 style="font-size: 20px;" id="det-id"></h3>
+          <p style="color: var(--muted); font-size: 13px; margin-bottom: 12px;" id="det-date"></p>
+        </div>
+        <span class="badge" id="det-pay"></span>
+      </div>
       <div style="background: var(--input-bg); padding: 10px; border-radius: 8px; margin-bottom: 12px;">
         <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Customer</div>
         <div style="font-weight: 600;" id="det-cust-name"></div>
@@ -221,17 +482,113 @@ input:focus { border-color: var(--accent); }
         <thead><tr><th>Item</th><th>Qty</th><th style="text-align:right">Total</th></tr></thead>
         <tbody id="det-items"></tbody>
       </table>
-      <div style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: 700; font-size: 18px;">
-        <span>Total</span><span class="price">₹<span id="det-total"></span></span>
+      <div class="summary-row"><span>Subtotal</span><span id="det-subtotal" class="mono"></span></div>
+      <div class="summary-row"><span>Discount</span><span id="det-discount" class="mono"></span></div>
+      <div class="summary-row" id="det-tax-row"><span>Tax</span><span id="det-tax" class="mono"></span></div>
+      <div class="summary-row total"><span>Total</span><span class="price">₹<span id="det-total"></span></span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="deleteInvoiceConfirm()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+      </button>
+      <button class="btn btn-primary" id="btn-download-pdf">Download PDF Receipt</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SETTINGS SCREEN (overlay) ================= -->
+<div id="screen-settings">
+  <div class="settings-topbar">
+    <button class="btn-icon" onclick="closeSettings()" aria-label="Back">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    </button>
+    <h2>Settings</h2>
+  </div>
+  <div class="settings-body">
+
+    <div class="settings-group">
+      <h4>Business Profile</h4>
+      <div class="logo-preview-row">
+        <div class="logo-preview-box"><img id="settings-logo-preview" style="display:none;" alt="Logo"></div>
+        <div style="flex:1;">
+          <input type="file" id="logo-input" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('logo-input').click()">Upload Logo</button>
+        </div>
+      </div>
+      <div class="input-group" style="margin-top:14px;"><label>Business Name</label><input type="text" id="set-biz-name" placeholder="OnePharma"></div>
+      <div class="input-group"><label>Pharmacist / License</label><input type="text" id="set-license" placeholder="ALOK | Reg: DL-XXXXXX"></div>
+      <div class="input-group"><label>GST Number</label><input type="text" id="set-gst" placeholder="Optional"></div>
+      <div class="input-group" style="margin-bottom:0;"><label>Address / Phone</label><input type="text" id="set-address" placeholder="Shop address, contact number"></div>
+    </div>
+
+    <div class="settings-group">
+      <h4>Billing</h4>
+      <div class="form-grid" style="margin-bottom:0;">
+        <div class="input-group" style="margin-bottom:0;"><label>Tax / GST Rate (%)</label><input type="number" id="set-tax-rate" min="0" step="0.1" placeholder="0"></div>
+        <div class="input-group" style="margin-bottom:0;"><label>Currency Symbol</label><input type="text" id="set-currency" placeholder="₹" maxlength="3"></div>
       </div>
     </div>
-    <button class="btn btn-primary" id="btn-download-pdf">Download PDF Receipt</button>
+
+    <div class="settings-group">
+      <h4>Inventory Alerts</h4>
+      <div class="form-grid" style="margin-bottom:0;">
+        <div class="input-group" style="margin-bottom:0;"><label>Low Stock Threshold</label><input type="number" id="set-low-stock" min="0" placeholder="10"></div>
+        <div class="input-group" style="margin-bottom:0;"><label>Expiry Warning (days)</label><input type="number" id="set-exp-days" min="0" placeholder="90"></div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h4>Preferences</h4>
+      <div class="toggle-row">
+        <div>
+          <div class="lbl">Sound Effects</div>
+          <div class="desc">Play a tone on successful / failed scans</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="set-sound" checked><span class="slider-track"></span></label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px;">
+        <div>
+          <div class="lbl">Block Expired Sales</div>
+          <div class="desc">Prevent billing items past their expiry date</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="set-block-expired" checked><span class="slider-track"></span></label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveSettingsForm()">Save Settings</button>
+
+    <div class="settings-group" style="margin-top:20px;">
+      <h4>Cloud Sync</h4>
+      <div class="toggle-row" style="margin-bottom:12px;">
+        <div>
+          <div class="lbl" id="settings-sync-label">Synced</div>
+          <div class="desc" id="settings-sync-desc">All data is backed up to the cloud.</div>
+        </div>
+        <span class="sync-dot" id="settings-sync-dot"></span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="manualSync()" style="width:100%;">Retry Sync Now</button>
+    </div>
+
+    <div class="settings-group">
+      <h4>Data Management</h4>
+      <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:10px;" onclick="exportBackup()">Export Backup (JSON)</button>
+      <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:10px;" onclick="exportInventoryCSV()">Export Inventory (CSV)</button>
+      <input type="file" id="import-input" accept="application/json" style="display:none;" onchange="importBackup(event)">
+      <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:10px;" onclick="document.getElementById('import-input').click()">Import Backup</button>
+      <button class="btn btn-danger-outline btn-sm" style="width:100%;" onclick="clearAllDataConfirm()">Clear All Data</button>
+    </div>
+
+    <p class="hint" style="text-align:center; margin-top: 10px;">OnePharma Enterprise · v2.0</p>
   </div>
 </div>
 
 <!-- Bottom Navigation -->
 <div class="nav">
-  <div class="nav-item active" onclick="switchTab('bill')" id="nav-bill">
+  <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+    Home
+  </div>
+  <div class="nav-item" onclick="switchTab('bill')" id="nav-bill">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
     Bill
   </div>
@@ -247,9 +604,42 @@ input:focus { border-color: var(--accent); }
 
 <!-- Scanner -->
 <div id="scanner-container">
+  <div class="scanner-topbar">
+    <button class="btn-icon" onclick="stopScanner()" aria-label="Close scanner">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-icon" id="torch-btn" style="display:none;" onclick="toggleTorch()" aria-label="Toggle flash">
+        <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+      </button>
+      <button class="btn-icon" id="camera-switch-btn" style="display:none;" onclick="switchCamera()" aria-label="Switch camera">
+        <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+      </button>
+    </div>
+  </div>
   <div id="reader"></div>
+  <div class="scanner-hint" id="scanner-hint">Align barcode within frame</div>
+  <div class="scanner-error" id="scanner-error"></div>
   <div class="scanner-controls">
-    <button class="btn btn-outline" style="background:#fff; color:#000;" onclick="stopScanner()">Close Scanner</button>
+    <div class="scanner-manual">
+      <input type="text" id="scanner-manual-input" placeholder="Type barcode instead..." onkeypress="if(event.key==='Enter') handleScannerManual()">
+      <button class="btn btn-primary" style="width:auto; padding:12px 18px;" onclick="handleScannerManual()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div id="toast-container"></div>
+
+<!-- Confirm Modal -->
+<div class="modal-backdrop" id="confirm-backdrop">
+  <div class="modal-sheet">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-message"></p>
+    <div class="btn-row">
+      <button class="btn btn-outline" id="confirm-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="confirm-ok-btn">Confirm</button>
+    </div>
   </div>
 </div>
 
@@ -257,8 +647,10 @@ input:focus { border-color: var(--accent); }
 <div id="print-container">
   <div class="lh-header">
     <div>
-      <div class="lh-brand">OnePharma</div>
-      <div style="font-size: 12px; color: #64748b;">Pharmacist: ALOK | Reg: DL-XXXXXX</div>
+      <div class="lh-brand" id="print-brand">OnePharma</div>
+      <div class="lh-meta" id="print-license">Pharmacist: ALOK | Reg: DL-XXXXXX</div>
+      <div class="lh-meta" id="print-address"></div>
+      <div class="lh-meta" id="print-gst"></div>
     </div>
     <img id="print-logo" class="lh-logo" style="display:none;" alt="Logo">
   </div>
@@ -271,187 +663,573 @@ input:focus { border-color: var(--accent); }
     <div style="text-align: right;">
       <div style="font-size: 16px; font-weight: 700;">Invoice #<span id="print-id"></span></div>
       <div id="print-date" style="font-size: 12px; color: #64748b;"></div>
+      <div id="print-pay" style="font-size: 12px; color: #64748b;"></div>
     </div>
   </div>
   <table class="lh-table">
     <thead><tr><th>Item</th><th>Batch</th><th>Qty</th><th>Price</th><th style="text-align:right">Total</th></tr></thead>
     <tbody id="print-tbody"></tbody>
   </table>
-  <div style="text-align: right; font-size: 20px; font-weight: 800; margin-top: 20px;">
-    Grand Total: ₹<span id="print-total"></span>
+  <div class="lh-totals">
+    <div class="lh-totals-row"><span>Subtotal</span><span id="print-subtotal"></span></div>
+    <div class="lh-totals-row"><span>Discount</span><span id="print-discount"></span></div>
+    <div class="lh-totals-row" id="print-tax-row"><span id="print-tax-label">Tax</span><span id="print-tax"></span></div>
+    <div class="lh-totals-row grand"><span>Total</span><span id="print-total"></span></div>
   </div>
 </div>
 
 <script>
 /* =========================================
-   DATABASE & STATE
+   CONFIG & STATE
    ========================================= */
 const SUPABASE_URL = 'https://xhlfhnzrslvfsunjmzkg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhobGZobnpyc2x2ZnN1bmptemtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMDU4OTYsImV4cCI6MjEwMzU4MTg5Nn0.ClMkaq8Runl7mKAH3mUplQwpvSQefgzlWIIBDv8_lJI';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let inventory = JSON.parse(localStorage.getItem('op_inv_v3')) || [];
-let invoices = JSON.parse(localStorage.getItem('op_invc_v3')) || [];
+const LS = {
+  inv: 'op_inventory_v4', invc: 'op_invoices_v4', pending: 'op_pending_v4',
+  settings: 'op_settings_v4', logo: 'op_logo_v4', theme: 'op_theme_v4'
+};
+
+const DEFAULT_SETTINGS = {
+  bizName: 'OnePharma', license: 'ALOK | Reg: DL-XXXXXX', gst: '', address: '',
+  taxRate: 0, currency: '₹', lowStockThreshold: 10, expiryWarningDays: 90,
+  soundEnabled: true, blockExpired: true
+};
+
+let inventory = [];
+let invoices = [];
 let cart = [];
-let logoDataUrl = localStorage.getItem('op_logo') || '';
+let settings = { ...DEFAULT_SETTINGS };
+let pending = { inventory: {}, invoices: {} };
+let logoDataUrl = '';
+let discount = 0;
+let paymentMethod = 'Cash';
+let stockFilter = 'all';
+let editingBarcode = null;
+let syncInProgress = false;
 
-// Theme & Branding setup
-if (localStorage.getItem('op_theme') === 'light') {
-  document.documentElement.setAttribute('data-theme', 'light');
+/* =========================================
+   UTILITIES
+   ========================================= */
+function $(id) { return document.getElementById(id); }
+function uid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
 }
-if (logoDataUrl) applyLogo(logoDataUrl);
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+function fmtMoney(n) { return settings.currency + Number(n || 0).toFixed(2); }
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function isSameDay(a, b) { return a.toDateString() === b.toDateString(); }
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  return Math.round((d - now) / 86400000);
+}
+function debounce(fn, wait) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), wait); };
+}
 
+/* =========================================
+   SOUND FEEDBACK (Web Audio API - no external files)
+   ========================================= */
+let audioCtx = null;
+function ensureAudio() {
+  if (!settings.soundEnabled) return null;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  } catch (e) { return null; }
+}
+function tone(freq, startOffset, dur, type, vol) {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  const t0 = ctx.currentTime + startOffset;
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(vol || 0.2, t0 + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.02);
+}
+function playSuccess() { tone(1046, 0, 0.09, 'sine', 0.18); tone(1568, 0.08, 0.14, 'sine', 0.16); }
+function playError() { tone(220, 0, 0.22, 'sawtooth', 0.14); }
+function playAdd() { tone(880, 0, 0.06, 'sine', 0.12); }
+
+/* =========================================
+   TOASTS
+   ========================================= */
+const TOAST_ICONS = {
+  success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>',
+  error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>'
+};
+function toast(msg, type, duration) {
+  type = type || 'info'; duration = duration || 3200;
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = `<span class="icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</span><span>${escapeHtml(msg)}</span>`;
+  $('toast-container').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.25s'; setTimeout(() => el.remove(), 250); }, duration);
+}
+
+/* =========================================
+   CONFIRM MODAL
+   ========================================= */
+function confirmDialog(opts) {
+  return new Promise(resolve => {
+    $('confirm-title').innerText = opts.title || 'Are you sure?';
+    $('confirm-message').innerText = opts.message || '';
+    const okBtn = $('confirm-ok-btn');
+    okBtn.innerText = opts.confirmText || 'Confirm';
+    okBtn.className = 'btn ' + (opts.danger ? 'btn-primary' : 'btn-primary');
+    okBtn.style.background = opts.danger ? 'var(--danger)' : '';
+    okBtn.style.boxShadow = opts.danger ? 'none' : '';
+    $('confirm-backdrop').classList.add('show');
+    const cleanup = (val) => {
+      $('confirm-backdrop').classList.remove('show');
+      okBtn.onclick = null; $('confirm-cancel-btn').onclick = null;
+      resolve(val);
+    };
+    okBtn.onclick = () => cleanup(true);
+    $('confirm-cancel-btn').onclick = () => cleanup(false);
+  });
+}
+
+/* =========================================
+   THEME & LOGO
+   ========================================= */
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme');
   const next = current === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('op_theme', next);
+  localStorage.setItem(LS.theme, next);
 }
-
 function handleLogoUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('Please select an image file.', 'error'); return; }
   const reader = new FileReader();
   reader.onload = (evt) => {
     logoDataUrl = evt.target.result;
-    localStorage.setItem('op_logo', logoDataUrl);
+    localStorage.setItem(LS.logo, logoDataUrl);
     applyLogo(logoDataUrl);
+    toast('Logo updated', 'success');
   };
   reader.readAsDataURL(file);
 }
-
 function applyLogo(url) {
-  const img = document.getElementById('app-logo');
-  const printImg = document.getElementById('print-logo');
-  img.src = url; img.style.display = 'block';
-  printImg.src = url; printImg.style.display = 'block';
+  ['app-logo', 'print-logo', 'settings-logo-preview'].forEach(id => {
+    const img = $(id);
+    if (!img) return;
+    img.src = url; img.style.display = 'block';
+  });
 }
 
 /* =========================================
-   PERSISTENCE FIXES
+   PERSISTENCE (local-first, cloud best-effort)
    ========================================= */
+function loadLocal() {
+  try { inventory = JSON.parse(localStorage.getItem(LS.inv)) || []; } catch (e) { inventory = []; }
+  try { invoices = JSON.parse(localStorage.getItem(LS.invc)) || []; } catch (e) { invoices = []; }
+  try { pending = JSON.parse(localStorage.getItem(LS.pending)) || { inventory: {}, invoices: {} }; } catch (e) { pending = { inventory: {}, invoices: {} }; }
+  try { settings = { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(LS.settings)) || {}) }; } catch (e) { settings = { ...DEFAULT_SETTINGS }; }
+  logoDataUrl = localStorage.getItem(LS.logo) || '';
+  if (localStorage.getItem(LS.theme) === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  if (logoDataUrl) applyLogo(logoDataUrl);
+}
+function saveLocalInventory() { localStorage.setItem(LS.inv, JSON.stringify(inventory)); }
+function saveLocalInvoices() { localStorage.setItem(LS.invc, JSON.stringify(invoices)); }
+function savePending() { localStorage.setItem(LS.pending, JSON.stringify(pending)); }
+function saveSettingsLocal() { localStorage.setItem(LS.settings, JSON.stringify(settings)); }
+
+function pendingCount() {
+  return Object.keys(pending.inventory).length + Object.keys(pending.invoices).length;
+}
+function updateSyncIndicator() {
+  const online = navigator.onLine;
+  const dots = [$('sync-dot'), $('settings-sync-dot')];
+  const label = pendingCount() > 0 ? (online ? 'Syncing…' : 'Offline — will sync') : (online ? 'Synced' : 'Offline');
+  const cls = !online ? 'offline' : (pendingCount() > 0 ? 'pending' : '');
+  dots.forEach(d => { if (d) d.className = 'sync-dot ' + cls; });
+  if ($('sync-label')) $('sync-label').innerText = label;
+  if ($('settings-sync-label')) $('settings-sync-label').innerText = pendingCount() > 0 ? `${pendingCount()} item(s) pending sync` : 'All synced';
+  if ($('settings-sync-desc')) $('settings-sync-desc').innerText = online ? 'Data is backed up to the cloud automatically.' : 'You are offline. Changes are saved on this device.';
+  $('offline-banner').classList.toggle('show', !online);
+}
+
 async function loadCloudData() {
   try {
-    const { data: invData } = await db.from('inventory').select('*');
-    if (invData && invData.length) {
-      inventory = invData.map(i => ({
-        barcode: String(i.barcode),
-        name: String(i.name || ''),
-        batch: String(i.batch || ''),
-        mfg: i.mfg || '',
-        exp: i.exp || '',
-        qty: Number(i.qty) || 0,
-        price: Number(i.price) || 0
-      }));
-      localStorage.setItem('op_inv_v3', JSON.stringify(inventory));
-    }
-    const { data: invcData } = await db.from('invoices').select('*');
-    if (invcData && invcData.length) {
-      invoices = invcData;
-      localStorage.setItem('op_invc_v3', JSON.stringify(invoices));
-    }
-  } catch (err) { console.warn("Network fallback to local cache."); }
+    const { data: invData, error: invErr } = await db.from('inventory').select('*');
+    if (!invErr && invData) mergeInventory(invData);
+  } catch (err) { /* offline or table missing — local data remains authoritative */ }
+  try {
+    const { data: invcData, error: invcErr } = await db.from('invoices').select('*');
+    if (!invcErr && invcData) mergeInvoices(invcData);
+  } catch (err) { /* ignore */ }
+  updateSyncIndicator();
   renderUI();
 }
 
-async function syncData() {
-  localStorage.setItem('op_inv_v3', JSON.stringify(inventory));
-  localStorage.setItem('op_invc_v3', JSON.stringify(invoices));
-  renderUI();
-  try {
-    if (inventory.length) await db.from('inventory').upsert(inventory);
-    if (invoices.length) await db.from('invoices').upsert(invoices);
-  } catch (err) { console.error("Cloud sync failed:", err); }
+// Merge cloud records without clobbering local changes that haven't synced yet.
+function mergeInventory(cloudArr) {
+  const byBarcode = {};
+  inventory.forEach(i => { byBarcode[i.barcode] = i; });
+  cloudArr.forEach(ci => {
+    const barcode = String(ci.barcode);
+    if (pending.inventory[barcode]) return; // local edit not yet uploaded — keep local
+    byBarcode[barcode] = {
+      barcode, name: String(ci.name || ''), batch: String(ci.batch || ''),
+      mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0
+    };
+  });
+  inventory = Object.values(byBarcode);
+  saveLocalInventory();
 }
+function mergeInvoices(cloudArr) {
+  const byId = {};
+  invoices.forEach(i => { byId[i.id] = i; });
+  cloudArr.forEach(ci => {
+    if (pending.invoices[ci.id]) return;
+    byId[ci.id] = ci;
+  });
+  invoices = Object.values(byId).sort((a, b) => new Date(b.date) - new Date(a.date));
+  saveLocalInvoices();
+}
+
+async function syncInventoryItem(item) {
+  try {
+    const payload = { barcode: item.barcode, name: item.name, batch: item.batch, mfg: item.mfg, exp: item.exp, qty: item.qty, price: item.price };
+    const { error } = await db.from('inventory').upsert(payload, { onConflict: 'barcode' });
+    if (error) throw error;
+    delete pending.inventory[item.barcode];
+    savePending();
+    return true;
+  } catch (err) {
+    pending.inventory[item.barcode] = true;
+    savePending();
+    return false;
+  }
+}
+async function deleteInventoryCloud(barcode) {
+  try { await db.from('inventory').delete().eq('barcode', barcode); } catch (e) { /* best effort */ }
+}
+async function syncInvoiceRow(inv) {
+  try {
+    const { error } = await db.from('invoices').upsert(inv, { onConflict: 'id' });
+    if (error) throw error;
+    delete pending.invoices[inv.id];
+    savePending();
+    return true;
+  } catch (err) {
+    pending.invoices[inv.id] = true;
+    savePending();
+    return false;
+  }
+}
+async function deleteInvoiceCloud(id) {
+  try { await db.from('invoices').delete().eq('id', id); } catch (e) { /* best effort */ }
+}
+
+async function flushPending() {
+  if (syncInProgress || !navigator.onLine) return;
+  syncInProgress = true;
+  const invBarcodes = Object.keys(pending.inventory);
+  for (const bc of invBarcodes) {
+    const item = inventory.find(i => i.barcode === bc);
+    if (item) await syncInventoryItem(item); else { delete pending.inventory[bc]; savePending(); }
+  }
+  const invcIds = Object.keys(pending.invoices);
+  for (const id of invcIds) {
+    const inv = invoices.find(i => i.id === id);
+    if (inv) await syncInvoiceRow(inv); else { delete pending.invoices[id]; savePending(); }
+  }
+  syncInProgress = false;
+  updateSyncIndicator();
+}
+async function manualSync() {
+  toast('Syncing…', 'info', 1500);
+  await flushPending();
+  await loadCloudData();
+  toast(pendingCount() > 0 ? 'Some items still pending — will retry automatically' : 'Sync complete', pendingCount() > 0 ? 'warn' : 'success');
+}
+
+window.addEventListener('online', () => { updateSyncIndicator(); flushPending(); toast('Back online — syncing changes', 'info'); });
+window.addEventListener('offline', () => { updateSyncIndicator(); toast('You are offline. Changes will be saved locally.', 'warn'); });
+setInterval(() => { if (pendingCount() > 0) flushPending(); }, 30000);
 
 /* =========================================
-   ACTIONS & LOGIC
+   NAVIGATION
    ========================================= */
 function switchTab(tab) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(`screen-${tab}`).classList.add('active');
-  document.getElementById(`nav-${tab}`).classList.add('active');
+  $(`screen-${tab}`).classList.add('active');
+  $(`nav-${tab}`).classList.add('active');
   if (tab === 'invoices') hideInvoiceDetail();
+  if (tab === 'home') renderDashboard();
 }
+function openSettings() {
+  populateSettingsForm();
+  $('screen-settings').classList.add('show');
+}
+function closeSettings() { $('screen-settings').classList.remove('show'); }
 
-let html5QrCode;
-function startScanner(target) {
-  document.getElementById('scanner-container').style.display = 'flex';
+/* =========================================
+   SCANNER
+   ========================================= */
+let html5QrCode = null;
+let scannerTarget = null;
+let scanCameras = [];
+let scanCameraIndex = 0;
+let torchOn = false;
+let lastScanCode = '';
+let lastScanTime = 0;
+
+async function startScanner(target) {
+  scannerTarget = target;
+  $('scanner-error').style.display = 'none';
+  $('scanner-manual-input').value = '';
+  $('scanner-container').style.display = 'flex';
+  $('scanner-hint').innerText = target === 'bill' ? 'Align barcode to add to cart' : 'Align barcode to add/edit stock';
+  torchOn = false;
+
+  try {
+    scanCameras = await Html5Qrcode.getCameras();
+  } catch (e) { scanCameras = []; }
+  $('camera-switch-btn').style.display = scanCameras.length > 1 ? 'flex' : 'none';
+
   html5QrCode = new Html5Qrcode("reader");
-  html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } },
-    (decodedText) => { stopScanner(); processBarcode(decodedText, target); }
-  ).catch(() => alert("Camera access error."));
+  const cameraConfig = scanCameras.length ? { deviceId: { exact: scanCameras[scanCameraIndex % scanCameras.length].id } } : { facingMode: "environment" };
+
+  try {
+    await html5QrCode.start(cameraConfig, { fps: 12, qrbox: { width: 260, height: 160 } },
+      (decodedText) => onScanSuccess(decodedText, target)
+    );
+    checkTorchSupport();
+  } catch (err) {
+    showScannerError("Camera access denied or unavailable. Type the barcode below instead.");
+  }
 }
 
+function onScanSuccess(decodedText, target) {
+  const now = Date.now();
+  if (decodedText === lastScanCode && (now - lastScanTime) < 1600) return; // debounce duplicate reads
+  lastScanCode = decodedText; lastScanTime = now;
+  processBarcode(decodedText, target);
+}
+
+function showScannerError(msg) {
+  const el = $('scanner-error');
+  el.innerText = msg; el.style.display = 'block';
+}
+
+async function checkTorchSupport() {
+  try {
+    const track = html5QrCode.getRunningTrackCameraCapabilities ? null : null;
+  } catch (e) {}
+  try {
+    const capabilities = html5QrCode._localMediaStream ? html5QrCode._localMediaStream.getVideoTracks()[0].getCapabilities() : null;
+    $('torch-btn').style.display = (capabilities && capabilities.torch) ? 'flex' : 'none';
+  } catch (e) { $('torch-btn').style.display = 'none'; }
+}
+
+async function toggleTorch() {
+  try {
+    torchOn = !torchOn;
+    await html5QrCode.applyVideoConstraints({ advanced: [{ torch: torchOn }] });
+  } catch (e) { toast('Flash not supported on this device', 'warn'); }
+}
+
+async function switchCamera() {
+  if (scanCameras.length < 2) return;
+  scanCameraIndex = (scanCameraIndex + 1) % scanCameras.length;
+  await stopScannerInternal();
+  startScanner(scannerTarget);
+}
+
+async function stopScannerInternal() {
+  if (html5QrCode) {
+    try { await html5QrCode.stop(); html5QrCode.clear(); } catch (e) {}
+  }
+}
 function stopScanner() {
-  document.getElementById('scanner-container').style.display = 'none';
-  if (html5QrCode) { html5QrCode.stop().then(() => html5QrCode.clear()); }
+  $('scanner-container').style.display = 'none';
+  stopScannerInternal();
 }
-
+function handleScannerManual() {
+  const val = $('scanner-manual-input').value.trim();
+  if (!val) return;
+  processBarcode(val, scannerTarget);
+  $('scanner-manual-input').value = '';
+  stopScanner();
+}
 function handleManual(target) {
-  const el = document.getElementById(`manual-${target}`);
+  const el = $(`manual-${target}`);
   if (el.value.trim()) { processBarcode(el.value.trim(), target); el.value = ''; }
 }
 
+/* =========================================
+   BARCODE PROCESSING
+   ========================================= */
 function processBarcode(code, target) {
   const cleanCode = String(code).trim();
+  if (!cleanCode) return;
+
   if (target === 'bill') {
     const item = inventory.find(i => i.barcode === cleanCode);
-    if (!item) return alert("Item not in inventory!");
-    if (item.qty <= 0) return alert("Item out of stock!");
-    
+    if (!item) { playError(); toast(`Barcode "${cleanCode}" not found in inventory.`, 'error'); return; }
+    if (item.qty <= 0) { playError(); toast(`${item.name} is out of stock.`, 'error'); return; }
+    if (settings.blockExpired && item.exp) {
+      const d = daysUntil(item.exp);
+      if (d !== null && d < 0) { playError(); toast(`${item.name} has expired (Batch ${item.batch || 'N/A'}). Sale blocked.`, 'error', 4200); return; }
+    }
     const cartItem = cart.find(c => c.barcode === cleanCode);
     if (cartItem) {
-      if (cartItem.qty < item.qty) cartItem.qty++;
-      else alert("Stock limit reached!");
+      if (cartItem.qty < item.qty) { cartItem.qty++; playAdd(); }
+      else { playError(); toast('Stock limit reached for this item.', 'warn'); return; }
     } else {
       cart.push({ ...item, qty: 1 });
+      playSuccess();
     }
+    toast(`${item.name} added to cart`, 'success', 1600);
     renderUI();
   } else if (target === 'stock') {
-    document.getElementById('add-stock-form').style.display = 'block';
-    document.getElementById('st-code').value = cleanCode;
+    playSuccess();
+    editingBarcode = null;
+    $('add-stock-form').style.display = 'block';
+    $('st-code').value = cleanCode;
     const existing = inventory.find(i => i.barcode === cleanCode);
     if (existing) {
-      document.getElementById('st-name').value = existing.name;
-      document.getElementById('st-batch').value = existing.batch;
-      document.getElementById('st-mfg').value = existing.mfg;
-      document.getElementById('st-exp').value = existing.exp;
-      document.getElementById('st-qty').value = existing.qty;
-      document.getElementById('st-price').value = existing.price;
+      editingBarcode = existing.barcode;
+      $('stock-form-title').innerText = 'Edit Medicine';
+      $('st-name').value = existing.name;
+      $('st-batch').value = existing.batch;
+      $('st-mfg').value = existing.mfg;
+      $('st-exp').value = existing.exp;
+      $('st-qty').value = existing.qty;
+      $('st-price').value = existing.price;
+      $('btn-delete-stock').style.display = 'flex';
+      toast(`Editing existing item: ${existing.name}`, 'info', 2000);
     } else {
-      document.getElementById('st-name').value = '';
-      document.getElementById('st-batch').value = '';
-      document.getElementById('st-qty').value = '';
-      document.getElementById('st-price').value = '';
+      $('stock-form-title').innerText = 'New Medicine';
+      $('st-name').value = ''; $('st-batch').value = '';
+      $('st-mfg').value = ''; $('st-exp').value = '';
+      $('st-qty').value = ''; $('st-price').value = '';
+      $('btn-delete-stock').style.display = 'none';
     }
+    updateExpHint();
+    $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    $('st-name').focus();
   }
 }
 
-async function saveStock() {
-  const barcode = String(document.getElementById('st-code').value).trim();
-  const name = document.getElementById('st-name').value.trim();
-  const batch = document.getElementById('st-batch').value.trim();
-  const mfg = document.getElementById('st-mfg').value;
-  const exp = document.getElementById('st-exp').value;
-  const qty = parseInt(document.getElementById('st-qty').value, 10);
-  const price = parseFloat(document.getElementById('st-price').value);
+function openAddStockForm() {
+  editingBarcode = null;
+  $('add-stock-form').style.display = 'block';
+  $('stock-form-title').innerText = 'New Medicine';
+  ['st-code', 'st-name', 'st-batch', 'st-mfg', 'st-exp', 'st-qty', 'st-price'].forEach(id => $(id).value = '');
+  $('btn-delete-stock').style.display = 'none';
+  updateExpHint();
+  $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('st-code').focus();
+}
+function closeStockForm() { $('add-stock-form').style.display = 'none'; editingBarcode = null; }
 
-  if (!barcode || !name || isNaN(qty) || isNaN(price)) {
-    return alert("Please fill Name, Quantity, and Price correctly.");
-  }
+$('st-exp') && $('st-exp').addEventListener && document.addEventListener('input', (e) => { if (e.target && e.target.id === 'st-exp') updateExpHint(); });
+function updateExpHint() {
+  const exp = $('st-exp').value;
+  const hintEl = $('exp-hint');
+  if (!exp) { hintEl.innerText = ''; return; }
+  const d = daysUntil(exp);
+  if (d < 0) hintEl.innerHTML = '<span style="color:var(--danger); font-weight:700;">This date is already in the past.</span>';
+  else if (d <= settings.expiryWarningDays) hintEl.innerHTML = `<span style="color:var(--warn); font-weight:700;">Expires in ${d} day(s).</span>`;
+  else hintEl.innerText = `Expires in ${d} days.`;
+}
+
+/* =========================================
+   STOCK CRUD
+   ========================================= */
+async function saveStock() {
+  const barcode = String($('st-code').value).trim();
+  const name = $('st-name').value.trim();
+  const batch = $('st-batch').value.trim();
+  const mfg = $('st-mfg').value;
+  const exp = $('st-exp').value;
+  const qty = parseInt($('st-qty').value, 10);
+  const price = parseFloat($('st-price').value);
+
+  let valid = true;
+  [['err-st-name', !name], ['err-st-qty', isNaN(qty) || qty < 0], ['err-st-price', isNaN(price) || price < 0]]
+    .forEach(([id, bad]) => { $(id).style.display = bad ? 'block' : 'none'; if (bad) valid = false; });
+  [['st-name', !name], ['st-qty', isNaN(qty) || qty < 0], ['st-price', isNaN(price) || price < 0]]
+    .forEach(([id, bad]) => $(id).classList.toggle('err', bad));
+
+  if (!barcode) { toast('Barcode is required — scan or type one.', 'error'); return; }
+  if (!valid) { toast('Please fix the highlighted fields.', 'error'); return; }
 
   const newItem = { barcode, name, batch, mfg, exp, qty, price };
   const idx = inventory.findIndex(i => i.barcode === barcode);
-  if (idx > -1) inventory[idx] = newItem;
-  else inventory.push(newItem);
+  const isUpdate = idx > -1;
+  if (isUpdate) inventory[idx] = newItem; else inventory.push(newItem);
 
-  document.getElementById('add-stock-form').style.display = 'none';
-  await syncData();
-  alert("Stock saved successfully!");
+  saveLocalInventory();
+  pending.inventory[barcode] = true; savePending();
+  renderUI();
+  closeStockForm();
+  toast(isUpdate ? 'Stock updated successfully' : 'Stock added successfully', 'success');
+
+  const ok = await syncInventoryItem(newItem);
+  updateSyncIndicator();
+  if (!ok) toast('Saved on this device. Will sync to cloud when possible.', 'warn', 3500);
 }
 
+async function deleteStockConfirm() {
+  if (!editingBarcode) return;
+  const item = inventory.find(i => i.barcode === editingBarcode);
+  const ok = await confirmDialog({
+    title: 'Delete this item?',
+    message: `"${item ? item.name : editingBarcode}" will be permanently removed from inventory.`,
+    confirmText: 'Delete', danger: true
+  });
+  if (!ok) return;
+  inventory = inventory.filter(i => i.barcode !== editingBarcode);
+  saveLocalInventory();
+  delete pending.inventory[editingBarcode]; savePending();
+  deleteInventoryCloud(editingBarcode);
+  closeStockForm();
+  renderUI();
+  toast('Item deleted', 'success');
+}
+
+function setStockFilter(f) {
+  stockFilter = f;
+  document.querySelectorAll('#screen-stock .chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  renderUI();
+}
+function computeStockStatus(item) {
+  if (item.qty <= 0) return { label: 'Out of Stock', cls: 'badge-danger', strip: 'status-danger' };
+  const d = item.exp ? daysUntil(item.exp) : null;
+  if (d !== null && d < 0) return { label: 'Expired', cls: 'badge-danger', strip: 'status-danger' };
+  if (d !== null && d <= settings.expiryWarningDays) return { label: `Expires in ${d}d`, cls: 'badge-warn', strip: 'status-warn' };
+  if (item.qty <= settings.lowStockThreshold) return { label: 'Low Stock', cls: 'badge-warn', strip: 'status-warn' };
+  return { label: 'In Stock', cls: 'badge-ok', strip: 'status-strip' };
+}
+
+/* =========================================
+   BILLING / CART
+   ========================================= */
 function updateCartQty(barcode, delta) {
   const idx = cart.findIndex(c => c.barcode === barcode);
   if (idx > -1) {
@@ -460,83 +1238,175 @@ function updateCartQty(barcode, delta) {
       const inv = inventory.find(i => i.barcode === barcode);
       const newQty = cart[idx].qty + delta;
       if (newQty <= 0) cart.splice(idx, 1);
-      else if (newQty > inv.qty) alert("Exceeds available stock!");
+      else if (inv && newQty > inv.qty) { toast('Exceeds available stock!', 'warn'); return; }
       else cart[idx].qty = newQty;
     }
     renderUI();
   }
 }
+function clearCart() {
+  if (!cart.length) return;
+  cart = [];
+  renderUI();
+  toast('Cart cleared', 'info', 1500);
+}
+function setPaymentMethod(m) {
+  paymentMethod = m;
+  document.querySelectorAll('.pay-chip').forEach(c => c.classList.toggle('active', c.dataset.pay === m));
+}
+function computeCartTotals() {
+  const subtotal = cart.reduce((s, c) => s + (c.price * c.qty), 0);
+  const disc = Math.min(Math.max(parseFloat($('cart-discount') ? $('cart-discount').value : 0) || 0, 0), subtotal);
+  const taxable = Math.max(subtotal - disc, 0);
+  const tax = taxable * (settings.taxRate / 100);
+  const total = taxable + tax;
+  return { subtotal, discount: disc, tax, total };
+}
 
 async function generateInvoice() {
   if (!cart.length) return;
-  const custName = document.getElementById('cust-name').value.trim() || 'Walk-in Customer';
-  const custPhone = document.getElementById('cust-phone').value.trim() || 'N/A';
+  const custName = $('cust-name').value.trim() || 'Walk-in Customer';
+  const custPhone = $('cust-phone').value.trim() || 'N/A';
+  const totals = computeCartTotals();
 
+  for (const c of cart) {
+    const inv = inventory.find(i => i.barcode === c.barcode);
+    if (!inv || inv.qty < c.qty) { toast(`Not enough stock for ${c.name}. Please refresh cart.`, 'error'); return; }
+  }
   cart.forEach(c => {
     const inv = inventory.find(i => i.barcode === c.barcode);
     if (inv) inv.qty -= c.qty;
   });
+  saveLocalInventory();
+  cart.forEach(c => { pending.inventory[c.barcode] = true; });
+  savePending();
 
-  const total = cart.reduce((s, c) => s + (c.price * c.qty), 0);
   const id = 'OP-' + Math.floor(100000 + Math.random() * 900000);
   const date = new Date().toLocaleString();
 
-  const invoice = { id, date, customerName: custName, customerPhone: custPhone, items: [...cart], total };
+  const invoice = {
+    id, date, customerName: custName, customerPhone: custPhone, items: [...cart],
+    subtotal: totals.subtotal, discount: totals.discount, tax: totals.tax,
+    taxRate: settings.taxRate, paymentMethod, total: totals.total
+  };
   invoices.unshift(invoice);
+  saveLocalInvoices();
+  pending.invoices[id] = true; savePending();
 
   cart = [];
-  document.getElementById('cust-name').value = '';
-  document.getElementById('cust-phone').value = '';
-  await syncData();
+  discount = 0;
+  $('cust-name').value = ''; $('cust-phone').value = '';
+  if ($('cart-discount')) $('cart-discount').value = '';
+  renderUI();
+  playSuccess();
+  toast(`Invoice ${id} created — ${fmtMoney(totals.total)}`, 'success');
   switchTab('invoices');
+
+  const invOk = await syncInvoiceRow(invoice);
+  for (const c of invoice.items) {
+    const item = inventory.find(i => i.barcode === c.barcode);
+    if (item) await syncInventoryItem(item);
+  }
+  updateSyncIndicator();
+  if (!invOk) toast('Invoice saved locally. Will sync when online.', 'warn', 3500);
 }
 
+/* =========================================
+   INVOICES
+   ========================================= */
 function viewInvoice(id) {
   const inv = invoices.find(i => i.id === id);
   if (!inv) return;
-  document.getElementById('invoice-list-view').style.display = 'none';
-  document.getElementById('invoice-detail-view').style.display = 'block';
+  $('invoice-list-view').style.display = 'none';
+  $('invoice-detail-view').style.display = 'block';
 
-  document.getElementById('det-id').innerText = '#' + inv.id;
-  document.getElementById('det-date').innerText = inv.date;
-  document.getElementById('det-cust-name').innerText = inv.customerName;
-  document.getElementById('det-cust-phone').innerText = inv.customerPhone;
-  document.getElementById('det-total').innerText = inv.total.toFixed(2);
+  $('det-id').innerText = '#' + inv.id;
+  $('det-date').innerText = inv.date;
+  $('det-cust-name').innerText = inv.customerName;
+  $('det-cust-phone').innerText = inv.customerPhone;
+  $('det-pay').innerText = inv.paymentMethod || 'Cash';
+  $('det-total').innerText = inv.total.toFixed(2);
 
-  document.getElementById('det-items').innerHTML = inv.items.map(i => `
+  const subtotal = inv.subtotal != null ? inv.subtotal : inv.items.reduce((s, i) => s + i.price * i.qty, 0);
+  const disc = inv.discount || 0;
+  const tax = inv.tax || 0;
+  $('det-subtotal').innerText = fmtMoney(subtotal);
+  $('det-discount').innerText = '-' + fmtMoney(disc);
+  if (tax > 0) {
+    $('det-tax-row').style.display = 'flex';
+    $('det-tax-row').firstElementChild.innerText = `Tax (${inv.taxRate || settings.taxRate}%)`;
+    $('det-tax').innerText = fmtMoney(tax);
+  } else { $('det-tax-row').style.display = 'none'; }
+
+  $('det-items').innerHTML = inv.items.map(i => `
     <tr>
-      <td>${i.name}<br><small style="color:var(--muted)">Batch: ${i.batch || 'N/A'}</small></td>
+      <td>${escapeHtml(i.name)}<br><small style="color:var(--muted)">Batch: ${escapeHtml(i.batch || 'N/A')}</small></td>
       <td>${i.qty}</td>
-      <td style="text-align:right">₹${(i.qty * i.price).toFixed(2)}</td>
+      <td style="text-align:right">${fmtMoney(i.qty * i.price)}</td>
     </tr>
   `).join('');
 
-  document.getElementById('btn-download-pdf').onclick = () => printPDF(inv);
+  $('btn-download-pdf').onclick = () => printPDF(inv);
+  editingInvoiceId = inv.id;
 }
+let editingInvoiceId = null;
 
 function hideInvoiceDetail() {
-  document.getElementById('invoice-list-view').style.display = 'block';
-  document.getElementById('invoice-detail-view').style.display = 'none';
+  $('invoice-list-view').style.display = 'block';
+  $('invoice-detail-view').style.display = 'none';
+}
+async function deleteInvoiceConfirm() {
+  const inv = invoices.find(i => i.id === editingInvoiceId);
+  if (!inv) return;
+  const ok = await confirmDialog({
+    title: 'Delete this invoice?',
+    message: `Invoice #${inv.id} will be permanently removed. This does not restore inventory quantities.`,
+    confirmText: 'Delete', danger: true
+  });
+  if (!ok) return;
+  invoices = invoices.filter(i => i.id !== inv.id);
+  saveLocalInvoices();
+  delete pending.invoices[inv.id]; savePending();
+  deleteInvoiceCloud(inv.id);
+  hideInvoiceDetail();
+  renderUI();
+  toast('Invoice deleted', 'success');
 }
 
 function printPDF(inv) {
-  document.getElementById('print-id').innerText = inv.id;
-  document.getElementById('print-date').innerText = inv.date;
-  document.getElementById('print-cust-name').innerText = inv.customerName;
-  document.getElementById('print-cust-phone').innerText = inv.customerPhone;
-  document.getElementById('print-total').innerText = inv.total.toFixed(2);
+  $('print-brand').innerText = settings.bizName || 'OnePharma';
+  $('print-license').innerText = settings.license || '';
+  $('print-address').innerText = settings.address || '';
+  $('print-gst').innerText = settings.gst ? 'GSTIN: ' + settings.gst : '';
+  $('print-id').innerText = inv.id;
+  $('print-date').innerText = inv.date;
+  $('print-pay').innerText = 'Payment: ' + (inv.paymentMethod || 'Cash');
+  $('print-cust-name').innerText = inv.customerName;
+  $('print-cust-phone').innerText = inv.customerPhone;
 
-  document.getElementById('print-tbody').innerHTML = inv.items.map(i => `
+  const subtotal = inv.subtotal != null ? inv.subtotal : inv.items.reduce((s, i) => s + i.price * i.qty, 0);
+  const disc = inv.discount || 0;
+  const tax = inv.tax || 0;
+  $('print-subtotal').innerText = fmtMoney(subtotal);
+  $('print-discount').innerText = '-' + fmtMoney(disc);
+  if (tax > 0) {
+    $('print-tax-row').style.display = 'flex';
+    $('print-tax-label').innerText = `Tax (${inv.taxRate || settings.taxRate}%)`;
+    $('print-tax').innerText = fmtMoney(tax);
+  } else { $('print-tax-row').style.display = 'none'; }
+  $('print-total').innerText = fmtMoney(inv.total);
+
+  $('print-tbody').innerHTML = inv.items.map(i => `
     <tr>
-      <td>${i.name}</td>
-      <td>${i.batch || 'N/A'}</td>
+      <td>${escapeHtml(i.name)}</td>
+      <td>${escapeHtml(i.batch || 'N/A')}</td>
       <td>${i.qty}</td>
-      <td>₹${i.price.toFixed(2)}</td>
-      <td style="text-align:right">₹${(i.qty * i.price).toFixed(2)}</td>
+      <td>${fmtMoney(i.price)}</td>
+      <td style="text-align:right">${fmtMoney(i.qty * i.price)}</td>
     </tr>
   `).join('');
 
-  const el = document.getElementById('print-container');
+  const el = $('print-container');
   html2pdf().set({
     margin: 0.4,
     filename: `Invoice_${inv.id}.pdf`,
@@ -547,60 +1417,226 @@ function printPDF(inv) {
 }
 
 /* =========================================
-   UI RENDER
+   SETTINGS
    ========================================= */
+function populateSettingsForm() {
+  $('set-biz-name').value = settings.bizName;
+  $('set-license').value = settings.license;
+  $('set-gst').value = settings.gst;
+  $('set-address').value = settings.address;
+  $('set-tax-rate').value = settings.taxRate;
+  $('set-currency').value = settings.currency;
+  $('set-low-stock').value = settings.lowStockThreshold;
+  $('set-exp-days').value = settings.expiryWarningDays;
+  $('set-sound').checked = settings.soundEnabled;
+  $('set-block-expired').checked = settings.blockExpired;
+}
+function saveSettingsForm() {
+  settings.bizName = $('set-biz-name').value.trim() || 'OnePharma';
+  settings.license = $('set-license').value.trim();
+  settings.gst = $('set-gst').value.trim();
+  settings.address = $('set-address').value.trim();
+  settings.taxRate = parseFloat($('set-tax-rate').value) || 0;
+  settings.currency = $('set-currency').value.trim() || '₹';
+  settings.lowStockThreshold = parseInt($('set-low-stock').value, 10) || 0;
+  settings.expiryWarningDays = parseInt($('set-exp-days').value, 10) || 0;
+  settings.soundEnabled = $('set-sound').checked;
+  settings.blockExpired = $('set-block-expired').checked;
+  saveSettingsLocal();
+  $('brand-name').innerText = settings.bizName;
+  renderUI();
+  toast('Settings saved', 'success');
+}
+
+function exportBackup() {
+  const backup = { inventory, invoices, settings, logo: logoDataUrl, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `OnePharma_Backup_${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded', 'success');
+}
+function exportInventoryCSV() {
+  if (!inventory.length) { toast('No inventory to export', 'warn'); return; }
+  const header = ['Barcode', 'Name', 'Batch', 'Mfg Date', 'Expiry Date', 'Quantity', 'Price'];
+  const rows = inventory.map(i => [i.barcode, i.name, i.batch, i.mfg, i.exp, i.qty, i.price]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `OnePharma_Inventory_${todayISO()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Inventory CSV downloaded', 'success');
+}
+function importBackup(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      const ok = await confirmDialog({
+        title: 'Import backup?',
+        message: `This will merge ${data.inventory ? data.inventory.length : 0} inventory item(s) and ${data.invoices ? data.invoices.length : 0} invoice(s) into your current data.`,
+        confirmText: 'Import'
+      });
+      if (!ok) return;
+      if (Array.isArray(data.inventory)) mergeInventory(data.inventory);
+      if (Array.isArray(data.invoices)) mergeInvoices(data.invoices);
+      if (data.settings) { settings = { ...DEFAULT_SETTINGS, ...data.settings }; saveSettingsLocal(); }
+      if (data.logo) { logoDataUrl = data.logo; localStorage.setItem(LS.logo, logoDataUrl); applyLogo(logoDataUrl); }
+      Object.keys(inventory).forEach(() => {});
+      inventory.forEach(i => pending.inventory[i.barcode] = true);
+      invoices.forEach(i => pending.invoices[i.id] = true);
+      savePending();
+      renderUI();
+      toast('Backup imported. Syncing to cloud…', 'success');
+      flushPending();
+    } catch (err) { toast('Invalid backup file.', 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+async function clearAllDataConfirm() {
+  const ok = await confirmDialog({
+    title: 'Clear all data?',
+    message: 'This permanently deletes all inventory and invoices from this device (cloud data is untouched). This cannot be undone.',
+    confirmText: 'Clear Everything', danger: true
+  });
+  if (!ok) return;
+  inventory = []; invoices = []; cart = []; pending = { inventory: {}, invoices: {} };
+  saveLocalInventory(); saveLocalInvoices(); savePending();
+  renderUI();
+  toast('All local data cleared', 'success');
+}
+
+/* =========================================
+   RENDER
+   ========================================= */
+function renderDashboard() {
+  const now = new Date();
+  $('home-date-sub').innerText = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const todaySales = invoices.filter(i => isSameDay(new Date(i.date), now)).reduce((s, i) => s + i.total, 0);
+  $('stat-today-sales').innerText = fmtMoney(todaySales);
+
+  const invValue = inventory.reduce((s, i) => s + i.qty * i.price, 0);
+  $('stat-inv-value').innerText = fmtMoney(invValue);
+
+  const lowCount = inventory.filter(i => i.qty > 0 && i.qty <= settings.lowStockThreshold).length;
+  $('stat-low-stock').innerText = lowCount;
+
+  const expCount = inventory.filter(i => {
+    if (!i.exp) return false;
+    const d = daysUntil(i.exp);
+    return d !== null && d >= 0 && d <= settings.expiryWarningDays;
+  }).length;
+  $('stat-expiring').innerText = expCount;
+
+  const recent = invoices.slice(0, 5);
+  $('home-recent-invoices').innerHTML = recent.length ? recent.map(i => `
+    <div class="card clickable" onclick="switchTab('invoices'); setTimeout(()=>viewInvoice('${i.id}'), 50)">
+      <div class="card-col">
+        <div class="card-title">#${i.id}</div>
+        <div class="card-sub">${escapeHtml(i.customerName)} · ${i.date}</div>
+      </div>
+      <div class="price">${fmtMoney(i.total)}</div>
+    </div>
+  `).join('') : `<div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>No invoices yet today</p></div>`;
+}
+
 function renderUI() {
   // Cart UI
-  const cartList = document.getElementById('cart-list');
-  const cartSum = document.getElementById('cart-summary');
+  const cartList = $('cart-list');
+  const cartSum = $('cart-summary');
+  $('cart-count').innerText = cart.length ? cart.reduce((s, c) => s + c.qty, 0) : '';
   if (cart.length) {
     cartList.innerHTML = cart.map(i => `
       <div class="card">
         <div class="card-col">
-          <div class="card-title">${i.name}</div>
-          <div class="card-sub">₹${i.price} each</div>
+          <div class="card-title">${escapeHtml(i.name)}</div>
+          <div class="card-sub">${fmtMoney(i.price)} each</div>
         </div>
         <div class="qty-stepper">
-          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', -1)">-</button>
+          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', -1)" aria-label="Decrease">-</button>
           <div class="qty-input-inline">${i.qty}</div>
-          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', 1)">+</button>
-          <button class="btn-qty btn-del" onclick="updateCartQty('${i.barcode}', -9999)">×</button>
+          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', 1)" aria-label="Increase">+</button>
+          <button class="btn-qty btn-del" onclick="updateCartQty('${i.barcode}', -9999)" aria-label="Remove">×</button>
         </div>
       </div>
     `).join('');
-    document.getElementById('cart-total').innerText = '₹' + cart.reduce((s, c) => s + (c.price * c.qty), 0).toFixed(2);
+    const totals = computeCartTotals();
+    $('sum-subtotal').innerText = fmtMoney(totals.subtotal);
+    $('sum-discount').innerText = '-' + fmtMoney(totals.discount);
+    if (settings.taxRate > 0) {
+      $('sum-tax-row').style.display = 'flex';
+      $('sum-tax-label').innerText = `Tax (${settings.taxRate}%)`;
+      $('sum-tax').innerText = fmtMoney(totals.tax);
+    } else { $('sum-tax-row').style.display = 'none'; }
+    $('cart-total').innerText = fmtMoney(totals.total);
     cartSum.style.display = 'block';
   } else {
-    cartList.innerHTML = '<p class="sub">Cart is empty.</p>';
+    cartList.innerHTML = `<div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5"/></svg><p>Cart is empty — scan an item to begin</p></div>`;
     cartSum.style.display = 'none';
   }
 
-  // Stock UI
-  document.getElementById('stock-list').innerHTML = inventory.length ? inventory.map(i => `
-    <div class="card">
+  // Stock UI (search + filter)
+  const q = ($('stock-search') ? $('stock-search').value : '').trim().toLowerCase();
+  let filtered = inventory.filter(i =>
+    !q || i.name.toLowerCase().includes(q) || i.barcode.toLowerCase().includes(q) || (i.batch || '').toLowerCase().includes(q)
+  );
+  if (stockFilter === 'low') filtered = filtered.filter(i => i.qty > 0 && i.qty <= settings.lowStockThreshold);
+  if (stockFilter === 'expiring') filtered = filtered.filter(i => { const d = i.exp ? daysUntil(i.exp) : null; return d !== null && d >= 0 && d <= settings.expiryWarningDays; });
+  if (stockFilter === 'expired') filtered = filtered.filter(i => { const d = i.exp ? daysUntil(i.exp) : null; return d !== null && d < 0; });
+
+  $('stock-list').innerHTML = filtered.length ? filtered.map(i => {
+    const status = computeStockStatus(i);
+    return `
+    <div class="card clickable status-strip ${status.strip}" onclick="processBarcode('${i.barcode.replace(/'/g, "\\'")}', 'stock')">
       <div class="card-col">
-        <div class="card-title">${i.name}</div>
-        <div class="card-sub"><span class="badge">Batch: ${i.batch || 'N/A'}</span> <span class="badge">Exp: ${i.exp || 'N/A'}</span></div>
+        <div class="card-title">${escapeHtml(i.name)}</div>
+        <div class="card-sub">
+          <span class="badge">Batch: ${escapeHtml(i.batch || 'N/A')}</span>
+          <span class="badge">Exp: ${escapeHtml(i.exp || 'N/A')}</span>
+          <span class="badge ${status.cls}">${status.label}</span>
+        </div>
       </div>
       <div class="card-col" style="align-items: flex-end;">
-        <div class="price">₹${i.price}</div>
+        <div class="price">${fmtMoney(i.price)}</div>
         <div class="card-sub">Qty: ${i.qty}</div>
       </div>
     </div>
-  `).join('') : '<p class="sub">No inventory added yet.</p>';
+  `; }).join('') : `<div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><p>${q || stockFilter !== 'all' ? 'No items match your search' : 'No inventory added yet — scan or add a medicine'}</p></div>`;
 
-  // Invoice UI
-  document.getElementById('invoice-list').innerHTML = invoices.length ? invoices.map(i => `
-    <div class="card" style="cursor:pointer;" onclick="viewInvoice('${i.id}')">
+  // Invoice UI (search)
+  const iq = ($('invoice-search') ? $('invoice-search').value : '').trim().toLowerCase();
+  const filteredInv = invoices.filter(i =>
+    !iq || i.id.toLowerCase().includes(iq) || (i.customerName || '').toLowerCase().includes(iq) || (i.customerPhone || '').toLowerCase().includes(iq)
+  );
+  $('invoice-list').innerHTML = filteredInv.length ? filteredInv.map(i => `
+    <div class="card clickable" onclick="viewInvoice('${i.id}')">
       <div class="card-col">
         <div class="card-title">#${i.id}</div>
-        <div class="card-sub">${i.customerName}</div>
+        <div class="card-sub">${escapeHtml(i.customerName)} · ${i.date}</div>
       </div>
-      <div class="price">₹${i.total.toFixed(2)}</div>
+      <div class="price">${fmtMoney(i.total)}</div>
     </div>
-  `).join('') : '<p class="sub">No invoices found.</p>';
+  `).join('') : `<div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>${iq ? 'No invoices match your search' : 'No invoices found'}</p></div>`;
+
+  updateSyncIndicator();
+  renderDashboard();
 }
 
+/* =========================================
+   INIT
+   ========================================= */
+loadLocal();
+$('brand-name').innerText = settings.bizName;
+renderUI();
+updateSyncIndicator();
 loadCloudData();
 </script>
 </body>
