@@ -3,36 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#F5F3EC">
+<meta name="theme-color" content="#FBF9F4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>EkPharma</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* ============================================================
-   DESIGN TOKENS
-   Palette: apothecary ivory + deep emerald + brass gold.
-   Deliberately not cream+terracotta — teal/emerald reads as
-   pharmacy/clinical trust, brass gold gives it a premium,
-   old-world-chemist edge without tipping into "generic AI cream".
-   ============================================================ */
 :root{
-  --bg:#F5F3EC; --bg-outer:#E9E4D5;
-  --surface:#FFFFFF; --surface-2:#FBF9F3; --surface-3:#F1EDE1;
-  --ink:#151E1A; --ink-soft:#3C4842; --muted:#707B73; --muted-dim:#A2AB9E;
-  --border:#E3DECD; --border-soft:#ECE7D8;
-  --accent:#0E6E58; --accent-dark:#093F32; --accent-soft:#DFEEE7; --accent-tint:#F1F8F4;
-  --gold:#A57A2E; --gold-dark:#7C5A1F; --gold-soft:#F4EAD3;
-  --danger:#B23B32; --danger-soft:#FAE7E3;
-  --warn:#A97A1E; --warn-soft:#F8EEDA;
-  --ok:#0E6E58; --ok-soft:#DFEEE7;
-  --shadow-sm:0 1px 2px rgba(21,30,26,.05),0 1px 1px rgba(21,30,26,.04);
-  --shadow-md:0 10px 26px rgba(21,30,26,.09),0 2px 8px rgba(21,30,26,.05);
-  --shadow-lg:0 24px 56px rgba(21,30,26,.16);
+  --bg:#FBF9F4; --surface:#FFFFFF; --surface-soft:#F3F1E9;
+  --ink:#181F1B; --muted:#6E756B; --muted-dim:#9AA098; --border:#E6E2D4;
+  --accent:#1F6E4F; --accent-dark:#154F39; --accent-soft:#E4F0E8;
+  --gold:#B98A2E; --gold-soft:#F6EBD3;
+  --danger:#B94A3D; --danger-soft:#F8E7E3;
+  --warn:#B9822A; --warn-soft:#F8EEDA;
+  --ok:#1F6E4F; --ok-soft:#E4F0E8;
+  --shadow:0 10px 28px rgba(24,31,27,.08);
   --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
@@ -44,231 +33,158 @@ button{font-family:inherit;}
 input,select{font-family:inherit;}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 h1,h2,h3{font-family:'Fraunces',serif;}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important;}}
 
-/* ---------- Logo mark ---------- */
-.logo-mark{flex-shrink:0;display:block;}
+/* ---------- Logo mark (inline SVG, used everywhere) ---------- */
+.logo-mark{flex-shrink:0;}
 .wordmark{font-family:'Fraunces',serif;font-weight:700;letter-spacing:-.01em;}
 .wordmark .ek{color:var(--gold);}
 .wordmark .pharma{color:var(--ink);}
 
-/* ================= DEVICE FRAME (desktop enhancement only) ================= */
-#app-frame{position:relative;}
-@media (min-width:760px){
-  body{background:radial-gradient(circle at 30% 0%,#F1ECDC 0%,var(--bg-outer) 60%);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:44px 20px;}
-  #app-frame{width:428px;max-width:100%;height:min(890px,92vh);border-radius:34px;overflow-y:auto;overflow-x:hidden;box-shadow:var(--shadow-lg);border:7px solid #fff;outline:1px solid var(--border);transform:translateZ(0);background:var(--bg);scrollbar-width:thin;}
-  #app-frame::-webkit-scrollbar{width:6px;}
-  #app-frame::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
-}
-
 /* ================= AUTH SCREEN ================= */
-#auth-screen{position:fixed;inset:0;background:
-    radial-gradient(600px 340px at 15% -8%, #E6F1EB 0%, transparent 60%),
-    radial-gradient(500px 320px at 110% 10%, #F4EAD3 0%, transparent 55%),
-    var(--bg);
-  z-index:100;display:flex;align-items:center;justify-content:center;padding:26px;overflow-y:auto;}
+#auth-screen{position:fixed;inset:0;background:linear-gradient(180deg,#F3EFE2 0%,var(--bg) 40%);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
 #auth-screen.hide{display:none;}
-.auth-card{width:100%;max-width:398px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:34px 28px;box-shadow:var(--shadow-md);}
-.auth-head{text-align:center;margin-bottom:24px;}
-.auth-badge{width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,var(--accent) 0%,var(--accent-dark) 100%);box-shadow:0 8px 18px rgba(9,63,50,.28);}
-.auth-head .wordmark{font-size:25px;}
-.auth-head .tagline{font-size:12px;color:var(--muted);margin-top:7px;font-weight:500;letter-spacing:.01em;}
-.auth-tabs{display:flex;background:var(--surface-3);border-radius:12px;padding:4px;margin-bottom:22px;}
-.auth-tab{flex:1;text-align:center;padding:9px 0;border-radius:9px;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;}
-.auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);}
-.auth-field{margin-bottom:14px;}
-.auth-field label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;}
-.auth-field input{width:100%;padding:12.5px 13px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface-3);font-size:14.5px;color:var(--ink);}
+.auth-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px 26px;box-shadow:var(--shadow);}
+.auth-head{text-align:center;margin-bottom:22px;}
+.auth-head .wordmark{font-size:26px;}
+.auth-head .tagline{font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:500;}
+.auth-tabs{display:flex;background:var(--surface-soft);border-radius:11px;padding:4px;margin-bottom:20px;}
+.auth-tab{flex:1;text-align:center;padding:9px 0;border-radius:8px;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;}
+.auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.auth-field{margin-bottom:13px;}
+.auth-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.auth-field input{width:100%;padding:12px 13px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface-soft);font-size:14.5px;color:var(--ink);}
 .auth-field input:focus{outline:none;border-color:var(--accent);background:#fff;}
-.auth-error{background:var(--danger-soft);color:var(--danger);font-size:12.5px;font-weight:600;padding:10px 12px;border-radius:10px;margin-bottom:13px;display:none;}
+.auth-error{background:var(--danger-soft);color:var(--danger);font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:9px;margin-bottom:12px;display:none;}
 .auth-error.show{display:block;}
-.auth-note{background:var(--accent-soft);color:var(--accent-dark);font-size:12.5px;font-weight:600;padding:10px 12px;border-radius:10px;margin-bottom:13px;display:none;}
+.auth-note{background:var(--accent-soft);color:var(--accent-dark);font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:9px;margin-bottom:12px;display:none;}
 .auth-note.show{display:block;}
-.auth-foot{text-align:center;font-size:11.5px;color:var(--muted-dim);margin-top:18px;line-height:1.5;}
-.auth-perks{display:flex;justify-content:center;gap:16px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border-soft);}
-.auth-perk{text-align:center;flex:1;}
-.auth-perk svg{color:var(--accent);margin-bottom:5px;}
-.auth-perk div{font-size:10px;color:var(--muted);font-weight:700;line-height:1.3;}
+.auth-foot{text-align:center;font-size:11.5px;color:var(--muted-dim);margin-top:16px;}
 
 /* ================= APP SHELL ================= */
-#app-root{display:none;padding-bottom:calc(108px + var(--safe-b));}
+#app-root{display:none;padding-bottom:calc(80px + var(--safe-b));}
 #app-root.show{display:block;}
-#offline-banner{display:none;position:sticky;top:0;z-index:25;background:var(--warn);color:#2A1D00;font-weight:700;font-size:12px;text-align:center;padding:8px;}
+#offline-banner{display:none;position:sticky;top:0;z-index:25;background:var(--warn);color:#241a00;font-weight:700;font-size:12.5px;text-align:center;padding:7px;}
 #offline-banner.show{display:block;}
 
-.appbar{position:sticky;top:0;z-index:20;background:rgba(245,243,236,.92);backdrop-filter:blur(12px);padding:calc(15px + var(--safe-t)) 18px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
-.brand-row{display:flex;align-items:center;gap:10px;min-width:0;}
-.brand-badge{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,var(--accent) 0%,var(--accent-dark) 100%);}
+.appbar{position:sticky;top:0;z-index:20;background:rgba(251,249,244,.92);backdrop-filter:blur(10px);padding:calc(13px + var(--safe-t)) 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.brand-row{display:flex;align-items:center;gap:9px;min-width:0;}
 .brand-text{min-width:0;}
-.brand-text .wordmark{font-size:17.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44vw;}
-.sync-row{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);font-weight:600;}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0;}
+.brand-text .wordmark{font-size:18px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44vw;}
+.sync-row{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted);font-weight:600;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);}
 .sync-dot.pending{background:var(--warn);animation:pulse 1.3s infinite;}
 .sync-dot.offline{background:var(--muted-dim);}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-.header-actions{display:flex;gap:8px;flex-shrink:0;}
-.icon-btn{width:37px;height:37px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--ink-soft);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s,background .15s;}
-.icon-btn:active{transform:scale(.93);}
-.icon-btn:hover{background:var(--surface-3);}
+.header-actions{display:flex;gap:8px;}
+.icon-btn{width:37px;height:37px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.icon-btn:active{transform:scale(.94);}
 
-.screen{display:none;padding:20px 18px;max-width:640px;margin:0 auto;animation:fade .22s ease;}
+.screen{display:none;padding:18px;max-width:640px;margin:0 auto;animation:fade .2s ease;}
 .screen.active{display:block;}
-@keyframes fade{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
-h2.page-title{font-weight:600;font-size:23px;margin-bottom:3px;letter-spacing:-.01em;}
-p.page-sub{color:var(--muted);font-size:13.5px;margin-bottom:20px;}
-.section-label{margin:24px 0 11px;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
-.section-label .link-btn{margin:-6px;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+h2.page-title{font-weight:600;font-size:22px;margin-bottom:3px;}
+p.page-sub{color:var(--muted);font-size:13.5px;margin-bottom:18px;}
+.section-label{margin:22px 0 10px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
 
 /* Buttons & inputs */
-.btn{border:none;border-radius:13px;font-weight:700;padding:13.5px;cursor:pointer;width:100%;display:flex;justify-content:center;align-items:center;gap:8px;font-size:14.5px;transition:transform .08s,filter .15s;}
+.btn{border:none;border-radius:12px;font-weight:700;padding:13px;cursor:pointer;width:100%;display:flex;justify-content:center;align-items:center;gap:8px;font-size:14.5px;transition:transform .08s;}
 .btn:active{transform:scale(.98);}
 .btn:disabled{opacity:.45;}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(9,63,50,.22);}
-.btn-primary:hover{filter:brightness(1.06);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-dark);}
 .btn-outline{background:var(--surface);border:1.5px solid var(--border);color:var(--ink);}
-.btn-outline:hover{background:var(--surface-3);}
 .btn-danger-outline{background:var(--danger-soft);color:var(--danger);border:none;}
-.btn-gold{background:var(--gold-soft);color:var(--gold-dark);border:none;}
-.btn-sm{width:auto;padding:9.5px 14px;font-size:12.5px;border-radius:10px;}
+.btn-sm{width:auto;padding:9px 14px;font-size:13px;border-radius:10px;}
 .btn-row{display:flex;gap:10px;}
 .btn-row>.btn{flex:1;}
-.link-btn{background:none;border:none;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;padding:6px;}
+.link-btn{background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;padding:6px;}
 
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 .input-group{margin-bottom:13px;}
-.input-group label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
-.input-group label .opt{text-transform:none;font-weight:600;color:var(--muted-dim);letter-spacing:0;}
+.input-group label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
 .hint{font-size:11.5px;color:var(--muted-dim);margin-top:5px;}
-input,select{width:100%;padding:12px 13px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface-3);font-size:14.5px;color:var(--ink);outline:none;transition:border-color .15s,background .15s;}
+input,select{width:100%;padding:12px 13px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface-soft);font-size:14.5px;color:var(--ink);outline:none;}
 input:focus{border-color:var(--accent);background:#fff;}
 input.err{border-color:var(--danger);}
-.err-msg{color:var(--danger);font-size:11.5px;margin-top:5px;font-weight:600;display:none;}
+.err-msg{color:var(--danger);font-size:12px;margin-top:5px;font-weight:600;display:none;}
 .search-wrap{position:relative;}
-.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted-dim);pointer-events:none;}
+.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted-dim);}
 .search-wrap input{padding-left:40px;}
 
 .chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
 .chip-row::-webkit-scrollbar{display:none;}
-.chip{flex-shrink:0;padding:8px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s;}
+.chip{flex-shrink:0;padding:8px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;}
 .chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-/* ---------- generic list card ---------- */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;overflow:hidden;transition:box-shadow .15s;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;overflow:hidden;}
 .card.status-strip::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ok);}
 .card.status-warn::before{background:var(--warn);}
 .card.status-danger::before{background:var(--danger);}
 .card.clickable{cursor:pointer;}
 .card.clickable:active{transform:scale(.99);}
-.card.clickable:hover{box-shadow:var(--shadow-sm);}
-.card-col{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;}
+.card-col{display:flex;flex-direction:column;gap:4px;min-width:0;}
 .card-title{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.card-sub{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
-.badge{display:inline-block;padding:3px 7px;background:var(--surface-3);border-radius:6px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+.card-sub{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.badge{display:inline-block;padding:3px 7px;background:var(--surface-soft);border-radius:5px;font-size:10.5px;font-weight:700;}
 .badge-ok{background:var(--ok-soft);color:var(--ok);}
 .badge-warn{background:var(--warn-soft);color:var(--warn);}
 .badge-danger{background:var(--danger-soft);color:var(--danger);}
-.badge-gold{background:var(--gold-soft);color:var(--gold-dark);}
 .price{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:var(--accent);}
-.empty-state{text-align:center;padding:44px 20px;color:var(--muted);}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
 .empty-state svg{opacity:.3;margin-bottom:10px;}
 .empty-state p{font-size:13.5px;font-weight:600;}
 
-/* ---------- price / MRP / discount / gst micro-components (used in cart, stock, invoices) ---------- */
-.price-block{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
-.price-line{display:flex;align-items:baseline;gap:6px;}
-.mrp-strike{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted-dim);text-decoration:line-through;}
-.price-now{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15.5px;color:var(--ink);}
-.tag-row{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
-.tag{font-size:9.5px;font-weight:800;padding:2.5px 6px;border-radius:5px;letter-spacing:.02em;white-space:nowrap;}
-.tag-gold{background:var(--gold-soft);color:var(--gold-dark);}
-.tag-teal{background:var(--accent-soft);color:var(--accent-dark);}
-.tag-muted{background:var(--surface-3);color:var(--muted);}
-
-.qty-stepper{display:flex;align-items:center;gap:6px;background:var(--surface-3);padding:4px;border-radius:9px;border:1px solid var(--border);flex-shrink:0;}
-.btn-qty{width:27px;height:27px;border-radius:7px;border:none;background:#fff;color:var(--ink);font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.qty-stepper{display:flex;align-items:center;gap:6px;background:var(--surface-soft);padding:4px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
+.btn-qty{width:27px;height:27px;border-radius:6px;border:none;background:#fff;color:var(--ink);font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08);}
 .btn-del{color:var(--danger);background:var(--danger-soft);}
-.qty-input-inline{width:30px;text-align:center;font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
-
-/* Cart line item (billing screen) */
-.cart-item{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:13px 15px;margin-bottom:9px;}
-.cart-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
-.cart-item-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.qty-input-inline{width:32px;text-align:center;font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
 
 /* Dashboard */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:16px;cursor:default;transition:box-shadow .15s;}
-.stat-card.clickable{cursor:pointer;}
-.stat-card.clickable:active{transform:scale(.98);}
-.stat-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px;margin-bottom:9px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:15px;}
+.stat-label{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px;margin-bottom:8px;}
 .stat-value{font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:700;}
-.stat-foot{font-size:10.5px;color:var(--muted-dim);font-weight:600;margin-top:4px;}
-.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0;}
-.qa-btn{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:17px 12px;text-align:center;cursor:pointer;transition:box-shadow .15s;}
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0;}
+.qa-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;}
 .qa-btn:active{transform:scale(.97);}
-.qa-btn:hover{box-shadow:var(--shadow-sm);}
-.qa-btn .qa-ico{width:38px;height:38px;border-radius:11px;background:var(--accent-tint);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
-.qa-btn div.qa-label{font-size:12.5px;font-weight:700;}
-.trend-row{display:flex;align-items:flex-end;gap:8px;height:106px;}
+.qa-btn svg{color:var(--accent);margin-bottom:6px;}
+.qa-btn div{font-size:12.5px;font-weight:700;}
+.trend-row{display:flex;align-items:flex-end;gap:8px;height:104px;}
 .trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
-.trend-bar{width:100%;max-width:26px;border-radius:6px 6px 2px 2px;background:var(--accent-soft);min-height:3px;transition:height .3s ease;}
+.trend-bar{width:100%;max-width:26px;border-radius:5px 5px 2px 2px;background:var(--accent-soft);min-height:3px;transition:height .3s ease;}
 .trend-bar.today{background:var(--accent);}
-.trend-bar-label{font-size:9.5px;color:var(--muted);font-weight:700;}
-.trend-bar-amt{font-size:9px;color:var(--muted-dim);font-family:'IBM Plex Mono',monospace;}
-.recent-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border-soft);cursor:pointer;}
-.recent-row:last-child{border-bottom:none;}
-.recent-row .rr-name{font-weight:700;font-size:13.5px;}
-.recent-row .rr-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.trend-bar-label{font-size:10px;color:var(--muted);font-weight:700;}
+.trend-bar-amt{font-size:9.5px;color:var(--muted-dim);font-family:'IBM Plex Mono',monospace;}
 
-.summary-row{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);font-weight:600;padding:5.5px 0;}
-.summary-row.strong{color:var(--ink-soft);}
-.summary-row.savings{color:var(--gold-dark);}
-.summary-row.total{font-size:18.5px;font-weight:800;color:var(--ink);padding-top:13px;margin-top:7px;border-top:1px solid var(--border);}
-.pay-row{display:flex;gap:8px;margin:13px 0;}
-.pay-chip{flex:1;text-align:center;padding:10px 4px;border-radius:11px;background:var(--surface-3);border:1px solid var(--border);font-size:12.5px;font-weight:700;cursor:pointer;color:var(--muted);}
+.summary-row{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);font-weight:600;padding:5px 0;}
+.summary-row.total{font-size:18px;font-weight:800;color:var(--ink);padding-top:12px;margin-top:6px;border-top:1px solid var(--border);}
+.pay-row{display:flex;gap:8px;margin:12px 0;}
+.pay-chip{flex:1;text-align:center;padding:10px 4px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border);font-size:12.5px;font-weight:700;cursor:pointer;color:var(--muted);}
 .pay-chip.active{background:var(--accent-soft);color:var(--accent-dark);border-color:var(--accent);}
 
-/* Floating pill nav */
-.nav{position:fixed;left:50%;bottom:calc(16px + var(--safe-b));transform:translateX(-50%);width:calc(100% - 32px);max-width:400px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:20px;display:flex;padding:6px;box-shadow:var(--shadow-md);z-index:30;}
-.nav-item{flex:1;padding:9px 0 8px;text-align:center;color:var(--muted);cursor:pointer;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:14px;transition:background .16s,color .16s;}
-.nav-item.active{background:var(--accent);color:#fff;}
-.nav-item svg{width:19px;height:19px;}
+.nav{position:fixed;bottom:0;width:100%;background:rgba(251,249,244,.94);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-b);z-index:30;}
+.nav-item{flex:1;padding:11px 0 9px;text-align:center;color:var(--muted);cursor:pointer;font-size:10.5px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.nav-item.active{color:var(--accent);}
+.nav-item svg{width:20px;height:20px;}
 
 #invoice-detail-view{display:none;}
-.detail-header{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
-.item-rows{margin-top:14px;}
-.item-row{padding:11px 0;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
-.item-row:last-child{border-bottom:none;}
-.item-row-name{font-weight:700;font-size:13.5px;}
-.item-row-meta{font-size:11px;color:var(--muted);margin-top:3px;}
-.item-row-amt{text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13.5px;flex-shrink:0;}
-.item-row-amt .qty-x{display:block;font-family:'Inter',sans-serif;font-weight:600;font-size:10.5px;color:var(--muted);margin-top:3px;}
+.detail-header{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px;}
+.detail-table{width:100%;margin-top:14px;border-collapse:collapse;font-size:13.5px;}
+.detail-table th{text-align:left;padding-bottom:8px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;}
+.detail-table td{padding:10px 0;border-bottom:1px solid var(--border);}
 
 #scanner-container{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column;}
 #reader{flex:1;width:100%;display:flex;align-items:center;position:relative;}
-#reader video{object-fit:cover;}
 .scanner-topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;padding-top:calc(16px + var(--safe-t));}
 .scanner-topbar .icon-btn{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.16);color:#fff;}
-.scanner-topbar .icon-btn.on{background:var(--gold);border-color:var(--gold);color:#1c1400;}
-.scan-frame{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;}
-.scan-frame-box{width:min(78vw,300px);height:150px;position:relative;}
-.scan-frame-box .corner{position:absolute;width:26px;height:26px;border-color:rgba(255,255,255,.9);}
-.scan-frame-box .corner.tl{top:0;left:0;border-top:3px solid;border-left:3px solid;border-radius:8px 0 0 0;}
-.scan-frame-box .corner.tr{top:0;right:0;border-top:3px solid;border-right:3px solid;border-radius:0 8px 0 0;}
-.scan-frame-box .corner.bl{bottom:0;left:0;border-bottom:3px solid;border-left:3px solid;border-radius:0 0 0 8px;}
-.scan-frame-box .corner.br{bottom:0;right:0;border-bottom:3px solid;border-right:3px solid;border-radius:0 0 8px 0;}
-.scan-line{position:absolute;left:6%;right:6%;height:2px;background:linear-gradient(90deg,transparent,#5FE3B3,transparent);top:8%;animation:scanmove 2.1s ease-in-out infinite;box-shadow:0 0 8px 1px rgba(95,227,179,.7);}
-@keyframes scanmove{0%,100%{top:8%;}50%{top:88%;}}
-.rear-cam-pill{position:absolute;top:calc(64px + var(--safe-t));left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);color:#fff;font-size:10.5px;font-weight:700;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;letter-spacing:.03em;}
-.rear-cam-pill svg{width:11px;height:11px;}
-.scanner-hint{position:absolute;bottom:20px;left:0;right:0;text-align:center;color:rgba(255,255,255,.88);font-size:13px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none;}
+.scanner-hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:rgba(255,255,255,.85);font-size:13px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none;}
 .scanner-controls{padding:18px 20px;padding-bottom:calc(20px + var(--safe-b));background:#000;display:flex;flex-direction:column;gap:10px;}
 .scanner-manual{display:flex;gap:8px;}
 .scanner-manual input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16);color:#fff;}
-.scanner-error{display:none;color:#fbd7d1;background:rgba(178,59,50,.28);border:1px solid rgba(178,59,50,.4);padding:10px 12px;border-radius:11px;font-size:12.5px;margin:0 20px 12px;text-align:center;}
+.scanner-error{display:none;color:#fbd7d1;background:rgba(185,74,61,.25);border:1px solid rgba(185,74,61,.4);padding:10px 12px;border-radius:10px;font-size:12.5px;margin:0 20px 12px;text-align:center;}
 
-#toast-container{position:fixed;left:0;right:0;bottom:calc(102px + var(--safe-b));z-index:80;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px;}
-.toast{pointer-events:auto;max-width:420px;width:100%;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-md);border-radius:13px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;animation:toastIn .2s ease;}
+#toast-container{position:fixed;left:0;right:0;bottom:calc(94px + var(--safe-b));z-index:80;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px;}
+.toast{pointer-events:auto;max-width:420px;width:100%;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;animation:toastIn .2s ease;}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .toast .icon{width:19px;height:19px;flex-shrink:0;display:flex;}
 .toast.success .icon{color:var(--ok);}
@@ -276,9 +192,9 @@ input.err{border-color:var(--danger);}
 .toast.info .icon{color:var(--accent);}
 .toast.warn .icon{color:var(--warn);}
 
-.modal-backdrop{position:fixed;inset:0;background:rgba(21,30,26,.48);z-index:70;display:none;align-items:flex-end;justify-content:center;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(24,31,27,.45);z-index:70;display:none;align-items:flex-end;justify-content:center;}
 .modal-backdrop.show{display:flex;}
-.modal-sheet{background:var(--surface);border-radius:22px 22px 0 0;padding:24px 20px calc(22px + var(--safe-b));width:100%;max-width:480px;animation:sheetUp .22s ease;border:1px solid var(--border);border-bottom:none;}
+.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:22px 20px calc(22px + var(--safe-b));width:100%;max-width:480px;animation:sheetUp .22s ease;border:1px solid var(--border);border-bottom:none;}
 @keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 .modal-sheet h3{font-size:17px;margin-bottom:8px;}
 .modal-sheet p{color:var(--muted);font-size:13.5px;margin-bottom:18px;}
@@ -286,35 +202,29 @@ input.err{border-color:var(--danger);}
 
 #screen-settings{display:none;position:fixed;inset:0;background:var(--bg);z-index:40;overflow-y:auto;padding-bottom:40px;}
 #screen-settings.show{display:block;}
-.settings-topbar{position:sticky;top:0;background:rgba(245,243,236,.94);backdrop-filter:blur(10px);padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:2;}
+.settings-topbar{position:sticky;top:0;background:rgba(251,249,244,.94);backdrop-filter:blur(10px);padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:2;}
 .settings-topbar h2{font-size:18px;}
 .settings-body{padding:18px;max-width:560px;margin:0 auto;}
-.settings-group{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:17px;margin-bottom:16px;}
-.settings-group h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:14px;font-weight:700;}
-.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;gap:10px;}
+.settings-group{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;}
+.settings-group h4{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:14px;font-weight:700;}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;}
 .toggle-row .lbl{font-weight:600;font-size:14px;}
-.toggle-row .desc{font-size:11.5px;color:var(--muted);margin-top:2px;}
-.switch{position:relative;width:42px;height:24px;flex-shrink:0;}
-.switch input{opacity:0;width:0;height:0;}
-.switch .track{position:absolute;inset:0;background:var(--border);border-radius:20px;cursor:pointer;transition:background .18s;}
-.switch .track::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
-.switch input:checked+.track{background:var(--accent);}
-.switch input:checked+.track::after{transform:translateX(18px);}
+.toggle-row .desc{font-size:12px;color:var(--muted);margin-top:2px;}
 
 @media print{.nav,.appbar{display:none!important;}}
 </style>
 </head>
 <body>
 
-<div id="app-frame">
-
 <!-- ================= AUTH SCREEN ================= -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-head">
-      <div class="auth-badge">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="18.5" cy="5.5" r="3" fill="#D9AA4F"/></svg>
-      </div>
+      <svg class="logo-mark" width="46" height="46" viewBox="0 0 46 46" style="display:block;margin:0 auto 12px;">
+        <circle cx="23" cy="23" r="23" fill="#1F6E4F"/>
+        <path d="M23 13v20M13 23h20" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="35" cy="11" r="5" fill="#B98A2E"/>
+      </svg>
       <div class="wordmark"><span class="ek">Ek</span><span class="pharma">Pharma</span></div>
       <div class="tagline">एक platform · your pharmacy, your room</div>
     </div>
@@ -338,11 +248,6 @@ input.err{border-color:var(--danger);}
     </div>
     <button class="btn btn-primary" id="auth-submit-btn" onclick="handleAuthSubmit()">Log in</button>
     <div class="auth-foot" id="auth-foot">Each pharmacy's data is completely private — you'll only ever see your own inventory, bills and invoices.</div>
-    <div class="auth-perks">
-      <div class="auth-perk"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="9" r="7"></circle><path d="M9 5v4l3 2"></path></svg><div>Real-time<br>sync</div></div>
-      <div class="auth-perk"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="12" height="8" rx="2"></rect><path d="M6 8V5.5a3 3 0 016 0V8"></path></svg><div>Private<br>data</div></div>
-      <div class="auth-perk"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2l2 4.5 5 .7-3.6 3.5.85 5-4.25-2.3-4.25 2.3.85-5L2 7.2l5-.7z"></path></svg><div>Works<br>offline</div></div>
-    </div>
   </div>
 </div>
 
@@ -353,9 +258,11 @@ input.err{border-color:var(--danger);}
 
 <div class="appbar">
   <div class="brand-row">
-    <div class="brand-badge">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="18.5" cy="5.5" r="2.6" fill="#D9AA4F"/></svg>
-    </div>
+    <svg class="logo-mark" width="32" height="32" viewBox="0 0 46 46">
+      <circle cx="23" cy="23" r="23" fill="#1F6E4F"/>
+      <path d="M23 13v20M13 23h20" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+      <circle cx="35" cy="11" r="5" fill="#B98A2E"/>
+    </svg>
     <div class="brand-text">
       <span class="wordmark"><span class="ek">Ek</span><span class="pharma">Pharma</span></span>
       <div class="sync-row"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Live</span></div>
@@ -377,41 +284,34 @@ input.err{border-color:var(--danger);}
     <div class="stat-card">
       <div class="stat-label"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6.5" cy="6.5" r="6"></circle></svg>Today's Sales</div>
       <div class="stat-value" id="stat-today-sales">₹0.00</div>
-      <div class="stat-foot" id="stat-today-count">0 bills today</div>
     </div>
     <div class="stat-card">
       <div class="stat-label"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4l6-3 6 3-6 3z"></path></svg>Inventory Value</div>
       <div class="stat-value" id="stat-inv-value">₹0.00</div>
-      <div class="stat-foot" id="stat-inv-count">0 items</div>
     </div>
-    <div class="stat-card clickable" style="color:var(--warn);" onclick="switchTab('stock'); setStockFilter('low')">
+    <div class="stat-card">
       <div class="stat-label" style="color:var(--warn);"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 5v2.5"></path><circle cx="6.5" cy="9.3" r=".3"></circle></svg>Low Stock</div>
       <div class="stat-value" id="stat-low-stock" style="color:var(--warn);">0</div>
-      <div class="stat-foot">Tap to view</div>
     </div>
-    <div class="stat-card clickable" onclick="switchTab('stock'); setStockFilter('expiring')">
+    <div class="stat-card">
       <div class="stat-label" style="color:var(--danger);"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6.5" cy="6.5" r="6"></circle></svg>Expiring Soon</div>
       <div class="stat-value" id="stat-expiring" style="color:var(--danger);">0</div>
-      <div class="stat-foot">Tap to view</div>
     </div>
   </div>
 
   <div class="quick-actions">
     <div class="qa-btn" onclick="switchTab('bill')">
-      <div class="qa-ico"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3v14M3 10h14"></path></svg></div>
-      <div class="qa-label">New Bill</div>
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3v14M3 10h14"></path></svg>
+      <div>New Bill</div>
     </div>
     <div class="qa-btn" onclick="switchTab('stock'); setTimeout(()=>startScanner('stock'), 250)">
-      <div class="qa-ico"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h14M6 12h1m4 0h1M4 16h12a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></div>
-      <div class="qa-label">Add Stock</div>
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h14M6 12h1m4 0h1M4 16h12a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+      <div>Add Stock</div>
     </div>
   </div>
 
   <div class="section-label">Sales — Last 7 Days</div>
   <div class="card" style="display:block;"><div id="sales-trend-chart"></div></div>
-
-  <div class="section-label">Recent Invoices<span class="link-btn" onclick="switchTab('invoices')">See all</span></div>
-  <div class="card" style="display:block;padding:6px 16px;" id="recent-invoices-card"></div>
 </section>
 
 <!-- BILL -->
@@ -433,19 +333,16 @@ input.err{border-color:var(--danger);}
   <div class="section-label">Cart Items <span id="cart-count" class="badge"></span></div>
   <div id="cart-list"></div>
 
-  <div id="cart-summary" style="display:none;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;">
-    <div class="input-group" style="margin-bottom:10px;"><label>Extra Bill Discount (₹) <span class="opt">optional</span></label><input type="number" id="cart-discount" min="0" step="0.01" placeholder="0.00" oninput="renderUI()"></div>
+  <div id="cart-summary" style="display:none;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;">
+    <div class="input-group" style="margin-bottom:10px;"><label>Discount (₹)</label><input type="number" id="cart-discount" min="0" step="0.01" placeholder="0.00" oninput="renderUI()"></div>
     <div class="pay-row" id="pay-row">
       <div class="pay-chip active" data-pay="Cash" onclick="setPaymentMethod('Cash')">Cash</div>
       <div class="pay-chip" data-pay="Card" onclick="setPaymentMethod('Card')">Card</div>
       <div class="pay-chip" data-pay="UPI" onclick="setPaymentMethod('UPI')">UPI</div>
     </div>
-    <div class="summary-row"><span>Total MRP</span><span id="sum-mrp" class="mono">₹0.00</span></div>
-    <div class="summary-row savings" id="sum-savings-row"><span>You Save</span><span id="sum-savings" class="mono">₹0.00</span></div>
     <div class="summary-row"><span>Subtotal</span><span id="sum-subtotal" class="mono">₹0.00</span></div>
-    <div class="summary-row" id="sum-discount-row"><span>Bill Discount</span><span id="sum-discount" class="mono">-₹0.00</span></div>
-    <div class="summary-row" id="sum-cgst-row"><span id="sum-cgst-label">CGST</span><span id="sum-cgst" class="mono">₹0.00</span></div>
-    <div class="summary-row" id="sum-sgst-row"><span id="sum-sgst-label">SGST</span><span id="sum-sgst" class="mono">₹0.00</span></div>
+    <div class="summary-row"><span>Discount</span><span id="sum-discount" class="mono">-₹0.00</span></div>
+    <div class="summary-row" id="sum-tax-row"><span id="sum-tax-label">Tax</span><span id="sum-tax" class="mono">₹0.00</span></div>
     <div class="summary-row total"><span>Total Amount</span><span id="cart-total" class="price">₹0.00</span></div>
     <div class="btn-row" style="margin-top:14px;">
       <button class="btn btn-outline" onclick="clearCart()" style="flex:0 0 auto;width:auto;padding:14px 16px;">
@@ -473,8 +370,8 @@ input.err{border-color:var(--danger);}
 
   <div class="input-group" style="margin-top:12px;"><input type="text" id="manual-stock" placeholder="Or enter barcode manually…" onkeypress="if(event.key==='Enter') handleManual('stock')"></div>
 
-  <div id="add-stock-form" style="display:none;margin-top:16px;background:var(--surface);padding:18px;border-radius:16px;border:1px solid var(--border);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+  <div id="add-stock-form" style="display:none;margin-top:16px;background:var(--surface);padding:16px;border-radius:14px;border:1px solid var(--border);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <h3 style="font-size:16px;" id="stock-form-title">Medicine Details</h3>
       <button class="icon-btn" style="width:30px;height:30px;" onclick="closeStockForm()" aria-label="Close">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg>
@@ -492,18 +389,10 @@ input.err{border-color:var(--danger);}
       <div class="input-group" style="margin-bottom:0;"><label>Expiry Date</label><input type="date" id="st-exp"></div>
     </div>
     <div class="hint" style="margin-top:-6px;margin-bottom:14px;" id="exp-hint"></div>
-
-    <div class="section-label" style="margin:4px 0 10px;">Pricing &amp; Tax</div>
-    <div class="form-grid">
-      <div class="input-group"><label>MRP (₹) <span class="opt">printed price</span></label><input type="number" id="st-mrp" step="0.01" min="0" placeholder="0.00" oninput="updateDiscountPreview()"></div>
-      <div class="input-group"><label>Selling Price (₹)</label><input type="number" id="st-price" step="0.01" min="0" placeholder="0.00" oninput="updateDiscountPreview()"><div class="err-msg" id="err-st-price">Enter a valid price.</div></div>
-    </div>
-    <div class="hint" id="discount-preview" style="margin-top:-6px;margin-bottom:14px;"></div>
     <div class="form-grid">
       <div class="input-group" style="margin-bottom:0;"><label>Quantity</label><input type="number" id="st-qty" min="0" placeholder="0"><div class="err-msg" id="err-st-qty">Enter a valid quantity.</div></div>
-      <div class="input-group" style="margin-bottom:0;"><label>GST Rate (%) <span class="opt">optional</span></label><input type="number" id="st-gst" min="0" max="100" step="0.1" placeholder="Use default"></div>
+      <div class="input-group" style="margin-bottom:0;"><label>Price (₹)</label><input type="number" id="st-price" step="0.01" min="0" placeholder="0.00"><div class="err-msg" id="err-st-price">Enter a valid price.</div></div>
     </div>
-
     <div style="height:14px;"></div>
     <div class="btn-row">
       <button class="btn btn-danger-outline" style="flex:0 0 auto;width:auto;padding:14px 16px;display:none;" id="btn-delete-stock" onclick="deleteStockConfirm()">
@@ -513,7 +402,7 @@ input.err{border-color:var(--danger);}
     </div>
   </div>
 
-  <div class="section-label" style="margin-top:22px;">Current Stock</div>
+  <div class="section-label" style="margin-top:20px;">Current Stock</div>
   <div class="search-wrap" style="margin-bottom:10px;">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15l-3.1-3.1M13 7.5A5.5 5.5 0 112 7.5a5.5 5.5 0 0111 0z"></path></svg>
     <input type="text" id="stock-search" placeholder="Search by name, barcode or batch…" oninput="renderUI()">
@@ -531,7 +420,7 @@ input.err{border-color:var(--danger);}
 <section id="screen-invoices" class="screen">
   <div id="invoice-list-view">
     <h2 class="page-title">Invoices</h2>
-    <p class="page-sub">View completed transactions and download or share PDF receipts.</p>
+    <p class="page-sub">View completed transactions and download PDF receipts.</p>
     <div class="search-wrap" style="margin-bottom:14px;">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15l-3.1-3.1M13 7.5A5.5 5.5 0 112 7.5a5.5 5.5 0 0111 0z"></path></svg>
       <input type="text" id="invoice-search" placeholder="Search by name, phone or invoice ID…" oninput="renderUI()">
@@ -546,28 +435,25 @@ input.err{border-color:var(--danger);}
         <div><h3 style="font-size:20px;" id="det-id"></h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px;" id="det-date"></p></div>
         <span class="badge" id="det-pay"></span>
       </div>
-      <div style="background:var(--surface-3);padding:11px 12px;border-radius:10px;margin-bottom:8px;">
-        <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Customer</div>
-        <div style="font-weight:700;margin-top:2px;" id="det-cust-name"></div>
+      <div style="background:var(--surface-soft);padding:10px;border-radius:8px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Customer</div>
+        <div style="font-weight:600;" id="det-cust-name"></div>
         <div style="color:var(--muted);font-size:13px;" id="det-cust-phone"></div>
       </div>
-      <div class="item-rows" id="det-items"></div>
-      <div class="summary-row"><span>Total MRP</span><span id="det-mrp" class="mono"></span></div>
-      <div class="summary-row savings" id="det-savings-row"><span>You Saved</span><span id="det-savings" class="mono"></span></div>
+      <table class="detail-table">
+        <thead><tr><th>Item</th><th>Qty</th><th style="text-align:right">Total</th></tr></thead>
+        <tbody id="det-items"></tbody>
+      </table>
       <div class="summary-row"><span>Subtotal</span><span id="det-subtotal" class="mono"></span></div>
-      <div class="summary-row" id="det-discount-row"><span>Bill Discount</span><span id="det-discount" class="mono"></span></div>
-      <div class="summary-row" id="det-cgst-row"><span id="det-cgst-label">CGST</span><span id="det-cgst" class="mono"></span></div>
-      <div class="summary-row" id="det-sgst-row"><span id="det-sgst-label">SGST</span><span id="det-sgst" class="mono"></span></div>
+      <div class="summary-row"><span>Discount</span><span id="det-discount" class="mono"></span></div>
+      <div class="summary-row" id="det-tax-row"><span>Tax</span><span id="det-tax" class="mono"></span></div>
       <div class="summary-row total"><span>Total</span><span class="price">₹<span id="det-total"></span></span></div>
     </div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="deleteInvoiceConfirm()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5h14M6.5 5V3.5a1 1 0 011-1h3a1 1 0 011 1V5m2 0-.7 10a1.5 1.5 0 01-1.5 1.4H6.7a1.5 1.5 0 01-1.5-1.4L4.5 5"></path></svg>
       </button>
-      <button class="btn btn-outline" id="btn-share-pdf" style="flex:0 0 auto;width:auto;padding:14px 16px;" title="Share PDF">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12V2M8 2L4.5 5.5M8 2l3.5 3.5"/><path d="M2.5 9v4a1.5 1.5 0 001.5 1.5h8a1.5 1.5 0 001.5-1.5V9"/></svg>
-      </button>
-      <button class="btn btn-primary" id="btn-download-pdf">Download PDF</button>
+      <button class="btn btn-primary" id="btn-download-pdf">Download PDF Receipt</button>
     </div>
   </div>
 </section>
@@ -590,12 +476,11 @@ input.err{border-color:var(--danger);}
     </div>
 
     <div class="settings-group">
-      <h4>Billing &amp; Tax</h4>
+      <h4>Billing</h4>
       <div class="form-grid" style="margin-bottom:0;">
-        <div class="input-group" style="margin-bottom:0;"><label>Default GST Rate (%)</label><input type="number" id="set-tax-rate" min="0" step="0.1" placeholder="0"></div>
+        <div class="input-group" style="margin-bottom:0;"><label>Tax / GST Rate (%)</label><input type="number" id="set-tax-rate" min="0" step="0.1" placeholder="0"></div>
         <div class="input-group" style="margin-bottom:0;"><label>Currency Symbol</label><input type="text" id="set-currency" placeholder="₹" maxlength="3"></div>
       </div>
-      <div class="hint" style="margin-top:8px;">Applied to items without their own GST rate. Automatically split into CGST + SGST on every invoice.</div>
     </div>
 
     <div class="settings-group">
@@ -608,13 +493,12 @@ input.err{border-color:var(--danger);}
 
     <div class="settings-group">
       <h4>Preferences</h4>
-      <div class="toggle-row" style="margin-bottom:14px;">
-        <div><div class="lbl">Block Expired Sales</div><div class="desc">Prevent billing items past their expiry date</div></div>
-        <label class="switch"><input type="checkbox" id="set-block-expired" checked><span class="track"></span></label>
-      </div>
       <div class="toggle-row">
-        <div><div class="lbl">Scanner Sound</div><div class="desc">Play a tone on every successful barcode scan</div></div>
-        <label class="switch"><input type="checkbox" id="set-sound-enabled" checked onchange="toggleSoundSetting(this.checked)"><span class="track"></span></label>
+        <div><div class="lbl">Block Expired Sales</div><div class="desc">Prevent billing items past their expiry date</div></div>
+        <label style="position:relative;width:42px;height:24px;flex-shrink:0;">
+          <input type="checkbox" id="set-block-expired" checked style="opacity:0;width:0;height:0;">
+          <span style="position:absolute;inset:0;background:var(--border);border-radius:20px;cursor:pointer;" onclick="const c=this.previousElementSibling;c.checked=!c.checked;"></span>
+        </label>
       </div>
     </div>
 
@@ -637,7 +521,7 @@ input.err{border-color:var(--danger);}
       <button class="btn btn-outline btn-sm" style="width:100%;" onclick="exportInvoicesCSV()">Export Invoices (CSV)</button>
     </div>
 
-    <p class="hint" style="text-align:center;margin-top:10px;">EkPharma · v4.0</p>
+    <p class="hint" style="text-align:center;margin-top:10px;">EkPharma · v3.0</p>
   </div>
 </div>
 
@@ -661,20 +545,22 @@ input.err{border-color:var(--danger);}
   </div>
 </div>
 
-<!-- Scanner (rear camera only) -->
+<!-- Scanner -->
 <div id="scanner-container">
   <div class="scanner-topbar">
     <button class="icon-btn" onclick="stopScanner()" aria-label="Close scanner">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l8 8M13 5l-8 8"></path></svg>
     </button>
-    <button class="icon-btn" id="torch-btn" style="display:none;" onclick="toggleTorch()" aria-label="Toggle flash">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 2L4 11h5v5l7-9h-5z"></path></svg>
-    </button>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="torch-btn" style="display:none;" onclick="toggleTorch()" aria-label="Toggle flash">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 2L4 11h5v5l7-9h-5z"></path></svg>
+      </button>
+      <button class="icon-btn" id="camera-switch-btn" style="display:none;" onclick="switchCamera()" aria-label="Switch camera">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v4h.5M14.5 10a6 6 0 01-11.5 1.5m11.5-4A6 6 0 013 9M14.5 14v-4h-.5"></path></svg>
+      </button>
+    </div>
   </div>
-  <div id="reader">
-    <div class="rear-cam-pill"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 8a2 2 0 012-2h1l1-1.5A1 1 0 019 4h6a1 1 0 01.86.5L17 6h1a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"/></svg>Rear camera</div>
-    <div class="scan-frame"><div class="scan-frame-box"><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div><div class="scan-line"></div></div></div>
-  </div>
+  <div id="reader"></div>
   <div class="scanner-hint" id="scanner-hint">Align barcode within frame</div>
   <div class="scanner-error" id="scanner-error"></div>
   <div class="scanner-controls">
@@ -700,8 +586,6 @@ input.err{border-color:var(--danger);}
 
 </div><!-- /#app-root -->
 
-</div><!-- /#app-frame -->
-
 <script>
 /* =========================================
    CONFIG & STATE
@@ -715,15 +599,13 @@ const DEFAULT_SETTINGS = {
   taxRate: 0, currency: '₹', lowStockThreshold: 10, expiryWarningDays: 90,
   blockExpired: true
 };
-const DEFAULT_LOCAL_PREFS = { soundEnabled: true };
 
 let session = null;
 let authMode = 'login';
 let inventory = [], invoices = [], cart = [];
 let settings = { ...DEFAULT_SETTINGS };
-let localPrefs = { ...DEFAULT_LOCAL_PREFS };
 let pending = { inventory: {}, invoices: {} };
-let paymentMethod = 'Cash', stockFilter = 'all', editingBarcode = null, editingInvoiceId = null;
+let discount = 0, paymentMethod = 'Cash', stockFilter = 'all', editingBarcode = null, editingInvoiceId = null;
 let syncInProgress = false, lastSyncError = null;
 let realtimeChannels = [];
 
@@ -744,97 +626,6 @@ function daysUntil(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const now = new Date(); now.setHours(0, 0, 0, 0);
   return Math.round((d - now) / 86400000);
-}
-
-/* =========================================
-   MRP / DISCOUNT / GST HELPERS — the heart of
-   "show MRP, price, discount & tax everywhere"
-   ========================================= */
-function discountPct(item) {
-  const mrp = Number(item.mrp) || 0, price = Number(item.price) || 0;
-  if (mrp <= 0 || price <= 0 || price >= mrp) return 0;
-  return Math.round((1 - price / mrp) * 100);
-}
-function itemGstRate(item) {
-  const r = item.gstRate;
-  return (r === null || r === undefined || r === '') ? Number(settings.taxRate) || 0 : Number(r) || 0;
-}
-function priceMetaHtml(item, opts) {
-  opts = opts || {};
-  const mrp = Number(item.mrp) || 0, price = Number(item.price) || 0;
-  const disc = discountPct(item);
-  const gst = itemGstRate(item);
-  let html = '<div class="price-block">';
-  html += '<div class="price-line">';
-  if (mrp > 0 && mrp !== price) html += `<span class="mrp-strike">${fmtMoney(mrp)}</span>`;
-  html += `<span class="price-now">${fmtMoney(price)}</span>`;
-  html += '</div>';
-  html += '<div class="tag-row">';
-  if (disc > 0) html += `<span class="tag tag-gold">${disc}% off</span>`;
-  html += `<span class="tag tag-teal">GST ${gst}%</span>`;
-  if (opts.qtyLabel) html += `<span class="tag tag-muted">${opts.qtyLabel}</span>`;
-  html += '</div></div>';
-  return html;
-}
-/* Shared totals engine — used identically for the live cart AND for
-   re-rendering any past invoice, so numbers always match the PDF. */
-function computeTotalsFromItems(items, discountAmt) {
-  const subtotal = items.reduce((s, c) => s + (Number(c.price) || 0) * c.qty, 0);
-  const mrpTotal = items.reduce((s, c) => s + ((Number(c.mrp) || Number(c.price) || 0) * c.qty), 0);
-  const disc = Math.min(Math.max(parseFloat(discountAmt) || 0, 0), subtotal);
-  let taxTotal = 0;
-  items.forEach(c => {
-    const lineAmt = (Number(c.price) || 0) * c.qty;
-    const lineShare = subtotal > 0 ? (lineAmt / subtotal) * disc : 0;
-    const taxableLine = Math.max(lineAmt - lineShare, 0);
-    taxTotal += taxableLine * (itemGstRate(c) / 100);
-  });
-  const taxable = Math.max(subtotal - disc, 0);
-  const total = taxable + taxTotal;
-  return {
-    subtotal, mrpTotal, savings: Math.max(mrpTotal - subtotal, 0),
-    discount: disc, taxable, tax: taxTotal, cgst: taxTotal / 2, sgst: taxTotal / 2, total
-  };
-}
-
-/* =========================================
-   SOUND — scanner beep (WebAudio, no external
-   file, works fully offline)
-   ========================================= */
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (Ctx) audioCtx = new Ctx();
-  }
-  return audioCtx;
-}
-function playTone(freqs, dur, type, gap) {
-  if (!localPrefs.soundEnabled) return;
-  dur = dur || 0.09; type = type || 'sine'; gap = gap || 0.02;
-  try {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
-    let t = ctx.currentTime;
-    freqs.forEach(f => {
-      const osc = ctx.createOscillator(), gain = ctx.createGain();
-      osc.type = type; osc.frequency.value = f;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.24, t + 0.008);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(t); osc.stop(t + dur + 0.03);
-      t += dur + gap;
-    });
-  } catch (e) { /* audio unsupported — fail silently */ }
-}
-function playScanBeep() { playTone([1318.5, 1760], 0.07, 'sine', 0.01); if (navigator.vibrate) navigator.vibrate(30); }
-function playErrorBuzz() { playTone([220], 0.16, 'square'); if (navigator.vibrate) navigator.vibrate([35, 50, 35]); }
-function toggleSoundSetting(checked) {
-  localPrefs.soundEnabled = checked;
-  localStorage.setItem('ek_prefs_sound', checked ? '1' : '0');
-  if (checked) playScanBeep();
 }
 
 /* =========================================
@@ -926,8 +717,6 @@ function loadLocal() {
   try { invoices = JSON.parse(localStorage.getItem(lsKey('ek_invoices'))) || []; } catch (e) { invoices = []; }
   try { pending = JSON.parse(localStorage.getItem(lsKey('ek_pending'))) || { inventory: {}, invoices: {} }; } catch (e) { pending = { inventory: {}, invoices: {} }; }
   try { settings = { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(lsKey('ek_settings'))) || {}) }; } catch (e) { settings = { ...DEFAULT_SETTINGS }; }
-  const soundPref = localStorage.getItem('ek_prefs_sound');
-  localPrefs.soundEnabled = soundPref === null ? true : soundPref === '1';
 }
 function saveLocalInventory() { localStorage.setItem(lsKey('ek_inventory'), JSON.stringify(inventory)); }
 function saveLocalInvoices() { localStorage.setItem(lsKey('ek_invoices'), JSON.stringify(invoices)); }
@@ -971,20 +760,12 @@ async function loadCloudData() {
   updateSyncIndicator();
   renderUI();
 }
-function invFromCloud(ci) {
-  return {
-    barcode: String(ci.barcode), name: String(ci.name || ''), batch: String(ci.batch || ''),
-    mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0,
-    mrp: Number(ci.mrp) || 0,
-    gstRate: (ci.gstRate === null || ci.gstRate === undefined || ci.gstRate === '') ? null : Number(ci.gstRate)
-  };
-}
 function mergeInventory(cloudArr) {
   const byBarcode = {}; inventory.forEach(i => { byBarcode[i.barcode] = i; });
   cloudArr.forEach(ci => {
     const barcode = String(ci.barcode);
     if (pending.inventory[barcode]) return;
-    byBarcode[barcode] = invFromCloud(ci);
+    byBarcode[barcode] = { barcode, name: String(ci.name || ''), batch: String(ci.batch || ''), mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0 };
   });
   inventory = Object.values(byBarcode); saveLocalInventory();
 }
@@ -996,10 +777,7 @@ function mergeInvoices(cloudArr) {
 }
 async function syncInventoryItem(item) {
   try {
-    const { error } = await db.from('inventory').upsert({
-      barcode: item.barcode, name: item.name, batch: item.batch, mfg: item.mfg, exp: item.exp,
-      qty: item.qty, price: item.price, mrp: item.mrp || 0, gstRate: item.gstRate
-    }, { onConflict: 'pharmacy_id,barcode' });
+    const { error } = await db.from('inventory').upsert({ barcode: item.barcode, name: item.name, batch: item.batch, mfg: item.mfg, exp: item.exp, qty: item.qty, price: item.price }, { onConflict: 'pharmacy_id,barcode' });
     if (error) throw error;
     delete pending.inventory[item.barcode]; savePending(); lastSyncError = null; return true;
   } catch (err) { console.error('syncInventoryItem', err); lastSyncError = err.message; pending.inventory[item.barcode] = true; savePending(); return false; }
@@ -1059,7 +837,7 @@ function handleInventoryRealtime(payload) {
   else {
     const ci = payload.new; const barcode = String(ci.barcode);
     if (pending.inventory[barcode]) return;
-    const item = invFromCloud(ci);
+    const item = { barcode, name: String(ci.name || ''), batch: String(ci.batch || ''), mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0 };
     const idx = inventory.findIndex(i => i.barcode === barcode);
     if (idx > -1) inventory[idx] = item; else inventory.push(item);
   }
@@ -1134,11 +912,9 @@ function openSettings() { populateSettingsForm(); $('screen-settings').classList
 function closeSettings() { $('screen-settings').classList.remove('show'); }
 
 /* =========================================
-   SCANNER — rear/environment-facing camera only.
-   No front-camera fallback and no camera switcher
-   by design, per pharmacy-counter requirements.
+   SCANNER
    ========================================= */
-let html5QrCode = null, scannerTarget = null, torchOn = false, lastScanCode = '', lastScanTime = 0;
+let html5QrCode = null, scannerTarget = null, scanCameras = [], scanCameraIndex = 0, torchOn = false, lastScanCode = '', lastScanTime = 0;
 
 async function startScanner(target) {
   scannerTarget = target;
@@ -1146,31 +922,20 @@ async function startScanner(target) {
   $('scanner-manual-input').value = '';
   $('scanner-container').style.display = 'flex';
   $('scanner-hint').innerText = target === 'bill' ? 'Align barcode to add to cart' : 'Align barcode to add/edit stock';
-  $('torch-btn').style.display = 'none';
   torchOn = false;
-  getAudioCtx(); // unlock audio on this user gesture (iOS requirement)
+  try { scanCameras = await Html5Qrcode.getCameras(); } catch (e) { scanCameras = []; }
+  $('camera-switch-btn').style.display = scanCameras.length > 1 ? 'flex' : 'none';
   html5QrCode = new Html5Qrcode("reader");
-  const scanConfig = { fps: 12, qrbox: { width: 260, height: 150 } };
+  const cameraConfig = scanCameras.length ? { deviceId: { exact: scanCameras[scanCameraIndex % scanCameras.length].id } } : { facingMode: "environment" };
   try {
-    // Strictly the rear/environment camera — "exact" refuses to silently fall back to front.
-    await html5QrCode.start({ facingMode: { exact: "environment" } }, scanConfig, (decodedText) => onScanSuccess(decodedText, target));
+    await html5QrCode.start(cameraConfig, { fps: 12, qrbox: { width: 260, height: 160 } }, (decodedText) => onScanSuccess(decodedText, target));
     checkTorchSupport();
-  } catch (err) {
-    try {
-      // Some browsers reject the "exact" constraint outright even when a rear camera exists —
-      // retry with a plain (non-exact) environment request, which still prefers the back camera.
-      await html5QrCode.start({ facingMode: "environment" }, scanConfig, (decodedText) => onScanSuccess(decodedText, target));
-      checkTorchSupport();
-    } catch (err2) {
-      showScannerError("Rear camera access denied or unavailable. Type the barcode below instead.");
-    }
-  }
+  } catch (err) { showScannerError("Camera access denied or unavailable. Type the barcode below instead."); }
 }
 function onScanSuccess(decodedText, target) {
   const now = Date.now();
   if (decodedText === lastScanCode && (now - lastScanTime) < 1600) return;
   lastScanCode = decodedText; lastScanTime = now;
-  playScanBeep();
   if (target === 'stock') stopScanner();
   processBarcode(decodedText, target);
 }
@@ -1182,11 +947,13 @@ async function checkTorchSupport() {
   } catch (e) { $('torch-btn').style.display = 'none'; }
 }
 async function toggleTorch() {
-  try {
-    torchOn = !torchOn;
-    await html5QrCode.applyVideoConstraints({ advanced: [{ torch: torchOn }] });
-    $('torch-btn').classList.toggle('on', torchOn);
-  } catch (e) { toast('Flash not supported on this device', 'warn'); }
+  try { torchOn = !torchOn; await html5QrCode.applyVideoConstraints({ advanced: [{ torch: torchOn }] }); }
+  catch (e) { toast('Flash not supported on this device', 'warn'); }
+}
+async function switchCamera() {
+  if (scanCameras.length < 2) return;
+  scanCameraIndex = (scanCameraIndex + 1) % scanCameras.length;
+  await stopScannerInternal(); startScanner(scannerTarget);
 }
 async function stopScannerInternal() { if (html5QrCode) { try { await html5QrCode.stop(); html5QrCode.clear(); } catch (e) {} } }
 function stopScanner() { $('scanner-container').style.display = 'none'; stopScannerInternal(); }
@@ -1210,17 +977,17 @@ function processBarcode(code, target) {
   if (!cleanCode) return;
   if (target === 'bill') {
     const item = inventory.find(i => i.barcode === cleanCode);
-    if (!item) { toast(`Barcode "${cleanCode}" not found in inventory.`, 'error'); playErrorBuzz(); return; }
-    if (item.qty <= 0) { toast(`${item.name} is out of stock.`, 'error'); playErrorBuzz(); return; }
+    if (!item) { toast(`Barcode "${cleanCode}" not found in inventory.`, 'error'); return; }
+    if (item.qty <= 0) { toast(`${item.name} is out of stock.`, 'error'); return; }
     if (settings.blockExpired && item.exp) {
       const d = daysUntil(item.exp);
-      if (d !== null && d < 0) { toast(`${item.name} has expired (Batch ${item.batch || 'N/A'}). Sale blocked.`, 'error', 4200); playErrorBuzz(); return; }
+      if (d !== null && d < 0) { toast(`${item.name} has expired (Batch ${item.batch || 'N/A'}). Sale blocked.`, 'error', 4200); return; }
     }
     const cartItem = cart.find(c => c.barcode === cleanCode);
     if (cartItem) {
       if (cartItem.qty < item.qty) cartItem.qty++;
-      else { toast('Stock limit reached for this item.', 'warn'); playErrorBuzz(); return; }
-    } else cart.push({ ...item, qty: 1, gstRate: itemGstRate(item) });
+      else { toast('Stock limit reached for this item.', 'warn'); return; }
+    } else cart.push({ ...item, qty: 1 });
     toast(`${item.name} added to cart`, 'success', 1600);
     renderUI();
   } else if (target === 'stock') {
@@ -1234,19 +1001,17 @@ function processBarcode(code, target) {
       $('st-name').value = existing.name; $('st-batch').value = existing.batch;
       $('st-mfg').value = existing.mfg; $('st-exp').value = existing.exp;
       $('st-qty').value = existing.qty; $('st-price').value = existing.price;
-      $('st-mrp').value = existing.mrp || ''; $('st-gst').value = existing.gstRate === null || existing.gstRate === undefined ? '' : existing.gstRate;
       $('btn-delete-stock').style.display = 'flex';
       toast(`Editing existing item: ${existing.name}`, 'info', 2000);
     } else {
       $('stock-form-title').innerText = 'New Medicine';
       $('st-name').value = ''; $('st-batch').value = '';
       $('st-mfg').value = ''; $('st-exp').value = '';
-      $('st-qty').value = ''; $('st-price').value = ''; $('st-mrp').value = ''; $('st-gst').value = '';
+      $('st-qty').value = ''; $('st-price').value = '';
       $('btn-delete-stock').style.display = 'none';
       lookupProductName(cleanCode);
     }
     updateExpHint();
-    updateDiscountPreview();
     $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     $('st-name').focus();
   }
@@ -1272,10 +1037,9 @@ function openAddStockForm() {
   editingBarcode = null;
   $('add-stock-form').style.display = 'block';
   $('stock-form-title').innerText = 'New Medicine';
-  ['st-code', 'st-name', 'st-batch', 'st-mfg', 'st-exp', 'st-qty', 'st-price', 'st-mrp', 'st-gst'].forEach(id => $(id).value = '');
+  ['st-code', 'st-name', 'st-batch', 'st-mfg', 'st-exp', 'st-qty', 'st-price'].forEach(id => $(id).value = '');
   $('btn-delete-stock').style.display = 'none';
   updateExpHint();
-  updateDiscountPreview();
   $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   $('st-code').focus();
 }
@@ -1289,15 +1053,6 @@ function updateExpHint() {
   else if (d <= settings.expiryWarningDays) hintEl.innerHTML = `<span style="color:var(--warn);font-weight:700;">Expires in ${d} day(s).</span>`;
   else hintEl.innerText = `Expires in ${d} days.`;
 }
-function updateDiscountPreview() {
-  const el = $('discount-preview');
-  const mrp = parseFloat($('st-mrp').value), price = parseFloat($('st-price').value);
-  if (!el) return;
-  if (isNaN(mrp) || isNaN(price) || mrp <= 0 || price <= 0) { el.innerText = ''; return; }
-  if (price > mrp) { el.innerHTML = '<span style="color:var(--warn);font-weight:700;">Selling price is above MRP.</span>'; return; }
-  const pct = discountPct({ mrp, price });
-  el.innerHTML = pct > 0 ? `<span style="color:var(--gold-dark);font-weight:700;">${pct}% off MRP</span> — customer saves ${fmtMoney(mrp - price)} per unit.` : 'Selling at MRP — no discount.';
-}
 
 /* =========================================
    STOCK CRUD
@@ -1308,8 +1063,6 @@ async function saveStock() {
   const batch = $('st-batch').value.trim();
   const mfg = $('st-mfg').value, exp = $('st-exp').value;
   const qty = parseInt($('st-qty').value, 10), price = parseFloat($('st-price').value);
-  const mrpRaw = $('st-mrp').value.trim(), mrp = mrpRaw === '' ? 0 : parseFloat(mrpRaw);
-  const gstRaw = $('st-gst').value.trim(), gstRate = gstRaw === '' ? null : parseFloat(gstRaw);
   let valid = true;
   [['err-st-name', !name], ['err-st-qty', isNaN(qty) || qty < 0], ['err-st-price', isNaN(price) || price < 0]]
     .forEach(([id, bad]) => { $(id).style.display = bad ? 'block' : 'none'; if (bad) valid = false; });
@@ -1317,7 +1070,7 @@ async function saveStock() {
     .forEach(([id, bad]) => $(id).classList.toggle('err', bad));
   if (!barcode) { toast('Barcode is required — scan or type one.', 'error'); return; }
   if (!valid) { toast('Please fix the highlighted fields.', 'error'); return; }
-  const newItem = { barcode, name, batch, mfg, exp, qty, price, mrp: isNaN(mrp) ? 0 : mrp, gstRate: (gstRate === null || isNaN(gstRate)) ? (gstRaw === '' ? null : 0) : gstRate };
+  const newItem = { barcode, name, batch, mfg, exp, qty, price };
   const idx = inventory.findIndex(i => i.barcode === barcode);
   if (idx > -1) inventory[idx] = newItem; else inventory.push(newItem);
   saveLocalInventory();
@@ -1374,7 +1127,13 @@ function updateCartQty(barcode, delta) {
 }
 function clearCart() { if (!cart.length) return; cart = []; renderUI(); toast('Cart cleared', 'info', 1500); }
 function setPaymentMethod(m) { paymentMethod = m; document.querySelectorAll('.pay-chip').forEach(c => c.classList.toggle('active', c.dataset.pay === m)); }
-function computeCartTotals() { return computeTotalsFromItems(cart, $('cart-discount') ? $('cart-discount').value : 0); }
+function computeCartTotals() {
+  const subtotal = cart.reduce((s, c) => s + (c.price * c.qty), 0);
+  const disc = Math.min(Math.max(parseFloat($('cart-discount') ? $('cart-discount').value : 0) || 0, 0), subtotal);
+  const taxable = Math.max(subtotal - disc, 0);
+  const tax = taxable * (settings.taxRate / 100);
+  return { subtotal, discount: disc, tax, total: taxable + tax };
+}
 async function generateInvoice() {
   if (!cart.length) return;
   const custName = $('cust-name').value.trim() || 'Walk-in Customer';
@@ -1395,7 +1154,7 @@ async function generateInvoice() {
   invoices.unshift(invoice); saveLocalInvoices();
   pending.invoices[id] = true; savePending();
 
-  cart = [];
+  cart = []; discount = 0;
   $('cust-name').value = ''; $('cust-phone').value = '';
   if ($('cart-discount')) $('cart-discount').value = '';
   renderUI();
@@ -1421,29 +1180,17 @@ function viewInvoice(id) {
   $('det-cust-name').innerText = inv.customerName;
   $('det-cust-phone').innerText = inv.customerPhone;
   $('det-pay').innerText = inv.paymentMethod || 'Cash';
-
-  const totals = computeTotalsFromItems(inv.items || [], inv.discount || 0);
-  $('det-total').innerText = totals.total.toFixed(2);
-  $('det-mrp').innerText = fmtMoney(totals.mrpTotal);
-  if (totals.savings > 0.005) { $('det-savings-row').style.display = 'flex'; $('det-savings').innerText = fmtMoney(totals.savings); }
-  else $('det-savings-row').style.display = 'none';
-  $('det-subtotal').innerText = fmtMoney(totals.subtotal);
-  if (totals.discount > 0.005) { $('det-discount-row').style.display = 'flex'; $('det-discount').innerText = '-' + fmtMoney(totals.discount); }
-  else $('det-discount-row').style.display = 'none';
-  if (totals.tax > 0.005) {
-    $('det-cgst-row').style.display = 'flex'; $('det-sgst-row').style.display = 'flex';
-    $('det-cgst').innerText = fmtMoney(totals.cgst); $('det-sgst').innerText = fmtMoney(totals.sgst);
-  } else { $('det-cgst-row').style.display = 'none'; $('det-sgst-row').style.display = 'none'; }
-
-  $('det-items').innerHTML = (inv.items || []).map(i => `
-    <div class="item-row">
-      <div><div class="item-row-name">${escapeHtml(i.name)}</div>
-        <div class="item-row-meta">Batch ${escapeHtml(i.batch || 'N/A')} · MRP ${fmtMoney(i.mrp || i.price)} · GST ${itemGstRate(i)}%${discountPct(i) > 0 ? ' · ' + discountPct(i) + '% off' : ''}</div>
-      </div>
-      <div class="item-row-amt">${fmtMoney(i.qty * i.price)}<span class="qty-x">${i.qty} × ${fmtMoney(i.price)}</span></div>
-    </div>`).join('');
+  $('det-total').innerText = inv.total.toFixed(2);
+  const subtotal = inv.subtotal != null ? inv.subtotal : inv.items.reduce((s, i) => s + i.price * i.qty, 0);
+  const disc = inv.discount || 0, tax = inv.tax || 0;
+  $('det-subtotal').innerText = fmtMoney(subtotal);
+  $('det-discount').innerText = '-' + fmtMoney(disc);
+  if (tax > 0) { $('det-tax-row').style.display = 'flex'; $('det-tax-row').firstElementChild.innerText = `Tax (${inv.taxRate || settings.taxRate}%)`; $('det-tax').innerText = fmtMoney(tax); }
+  else $('det-tax-row').style.display = 'none';
+  $('det-items').innerHTML = inv.items.map(i => `
+    <tr><td>${escapeHtml(i.name)}<br><small style="color:var(--muted)">Batch: ${escapeHtml(i.batch || 'N/A')}</small></td><td>${i.qty}</td><td style="text-align:right">${fmtMoney(i.qty * i.price)}</td></tr>
+  `).join('');
   $('btn-download-pdf').onclick = () => downloadInvoicePdf(inv);
-  $('btn-share-pdf').onclick = () => shareInvoicePdf(inv);
   editingInvoiceId = inv.id;
 }
 function hideInvoiceDetail() { $('invoice-list-view').style.display = 'block'; $('invoice-detail-view').style.display = 'none'; }
@@ -1461,147 +1208,91 @@ async function deleteInvoiceConfirm() {
 }
 
 /* =========================================
-   PDF — completely new letterhead-style template,
-   built on jsPDF + autoTable (real vector text, no
-   screenshot step). Shows MRP, per-item discount %,
-   per-item GST %, CGST/SGST split and total savings.
+   PDF — rebuilt on jsPDF + autoTable (real vector text,
+   drawn directly; no screenshot step, so it can't render
+   blank the way the old html2canvas approach sometimes did)
    ========================================= */
-function buildInvoicePdfDoc(inv) {
+function downloadInvoicePdf(inv) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 42;
-  const accent = [14, 110, 88];
-  const accentDark = [9, 63, 50];
-  const gold = [165, 122, 46];
-  const muted = [112, 123, 115];
-  const ink = [21, 30, 26];
-  const paleBand = [223, 238, 231];
+  const margin = 40;
+  const accent = [31, 110, 79];
+  const gold = [185, 138, 46];
+  const muted = [110, 117, 107];
+  const ink = [24, 31, 27];
 
-  const totals = computeTotalsFromItems(inv.items || [], inv.discount || 0);
+  // Header — wordmark logotype (text-based, always renders, no image loading race)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
+  doc.setTextColor(...gold); doc.text('Ek', margin, 52);
+  const ekWidth = doc.getTextWidth('Ek');
+  doc.setTextColor(...ink); doc.text('Pharma', margin + ekWidth, 52);
 
-  // ---- Header band ----
-  doc.setFillColor(...accentDark);
-  doc.rect(0, 0, pageWidth, 88, 'F');
-  // logo mark
-  doc.setDrawColor(255, 255, 255); doc.setLineWidth(2.4);
-  doc.line(margin + 12, 34, margin + 12, 54); doc.line(margin + 2, 44, margin + 22, 44);
-  doc.setFillColor(...gold); doc.circle(margin + 30, 30, 4, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(19); doc.setTextColor(255, 255, 255);
-  doc.text(settings.bizName || 'EkPharma', margin + 40, 50);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-  doc.setTextColor(220, 232, 226);
-  const subLine = [settings.license, settings.gst ? 'GSTIN: ' + settings.gst : ''].filter(Boolean).join('   ·   ');
-  if (subLine) doc.text(subLine, margin + 40, 64);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...muted);
+  let y = 68;
+  const headLines = [settings.bizName, settings.license, settings.address, settings.gst ? 'GSTIN: ' + settings.gst : ''].filter(Boolean);
+  headLines.forEach(line => { doc.text(line, margin, y); y += 13; });
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(255, 255, 255);
-  doc.text('TAX INVOICE', pageWidth - margin, 40, { align: 'right' });
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(220, 232, 226);
-  doc.text('#' + inv.id, pageWidth - margin, 56, { align: 'right' });
-  doc.text(fmtDate(inv.date), pageWidth - margin, 70, { align: 'right' });
+  // Invoice meta (top-right)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(...ink);
+  doc.text('INVOICE', pageWidth - margin, 46, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...muted);
+  doc.text('#' + inv.id, pageWidth - margin, 60, { align: 'right' });
+  doc.text(fmtDate(inv.date), pageWidth - margin, 73, { align: 'right' });
+  doc.text('Payment: ' + (inv.paymentMethod || 'Cash'), pageWidth - margin, 86, { align: 'right' });
 
-  let y = 112;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...muted);
-  if (settings.address) { doc.text(settings.address, margin, y); y += 13; }
+  y = Math.max(y, 96) + 12;
+  doc.setDrawColor(...accent); doc.setLineWidth(1.2); doc.line(margin, y, pageWidth - margin, y);
+  y += 20;
 
-  // ---- Billed To / Payment two-column block ----
-  const colW = (pageWidth - margin * 2 - 20) / 2;
-  doc.setFillColor(...paleBand);
-  doc.roundedRect(margin, y, colW, 52, 6, 6, 'F');
-  doc.roundedRect(margin + colW + 20, y, colW, 52, 6, 6, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...accentDark);
-  doc.text('BILLED TO', margin + 12, y + 16);
-  doc.text('PAYMENT', margin + colW + 32, y + 16);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...ink);
-  doc.text(inv.customerName || 'Walk-in Customer', margin + 12, y + 32);
-  doc.text(inv.paymentMethod || 'Cash', margin + colW + 32, y + 32);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...muted);
-  if (inv.customerPhone && inv.customerPhone !== 'N/A') doc.text(inv.customerPhone, margin + 12, y + 44);
-  doc.text('Invoice ' + inv.id, margin + colW + 32, y + 44);
+  // Customer block
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...muted);
+  doc.text('BILLED TO', margin, y);
+  y += 13;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(...ink);
+  doc.text(inv.customerName || 'Walk-in Customer', margin, y);
+  y += 14;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...muted);
+  if (inv.customerPhone && inv.customerPhone !== 'N/A') { doc.text(inv.customerPhone, margin, y); y += 8; }
+  y += 14;
 
-  y += 68;
-
-  // ---- Items table ----
-  const rows = (inv.items || []).map(it => {
-    const mrp = Number(it.mrp) || Number(it.price) || 0;
-    const disc = discountPct(it);
-    const gst = itemGstRate(it);
-    return [
-      it.name + (it.batch ? '\n' + 'Batch: ' + it.batch : ''),
-      fmtMoney(mrp), String(it.qty), fmtMoney(it.price),
-      disc > 0 ? disc + '%' : '—', gst + '%', fmtMoney(it.qty * it.price)
-    ];
-  });
+  // Items table
+  const rows = inv.items.map(it => [it.name, it.batch || 'N/A', String(it.qty), fmtMoney(it.price), fmtMoney(it.qty * it.price)]);
   doc.autoTable({
     startY: y,
     margin: { left: margin, right: margin },
-    head: [['Item', 'MRP', 'Qty', 'Rate', 'Disc', 'GST', 'Amount']],
+    head: [['Item', 'Batch', 'Qty', 'Price', 'Total']],
     body: rows,
-    styles: { font: 'helvetica', fontSize: 9, textColor: ink, cellPadding: 6.5, valign: 'middle' },
-    headStyles: { fillColor: accent, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
-    alternateRowStyles: { fillColor: [250, 249, 243] },
-    columnStyles: {
-      0: { cellWidth: 'auto' }, 1: { halign: 'right', cellWidth: 55 }, 2: { halign: 'center', cellWidth: 30 },
-      3: { halign: 'right', cellWidth: 55 }, 4: { halign: 'center', cellWidth: 38 }, 5: { halign: 'center', cellWidth: 34 },
-      6: { halign: 'right', cellWidth: 62 }
-    }
+    styles: { font: 'helvetica', fontSize: 10, textColor: ink, cellPadding: 7 },
+    headStyles: { fillColor: accent, textColor: [255, 255, 255], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [244, 242, 233] },
+    columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } }
   });
 
-  let finalY = doc.lastAutoTable.finalY + 22;
-  if (finalY > pageHeight - 190) { doc.addPage(); finalY = 50; }
+  let finalY = doc.lastAutoTable.finalY + 24;
+  const subtotal = inv.subtotal != null ? inv.subtotal : inv.items.reduce((s, i) => s + i.price * i.qty, 0);
+  const disc = inv.discount || 0, tax = inv.tax || 0;
   const totalsX = pageWidth - margin;
-  const totalsLabelX = totalsX - 168;
-
-  function totalLine(label, value, opts) {
-    opts = opts || {};
-    doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
-    doc.setFontSize(opts.bold ? 13.5 : 9.5);
-    doc.setTextColor(...(opts.color || (opts.bold ? ink : muted)));
-    doc.text(label, totalsLabelX, finalY);
+  function totalLine(label, value, bold) {
+    doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    doc.setFontSize(bold ? 13 : 10);
+    doc.setTextColor(...(bold ? ink : muted));
+    doc.text(label, totalsX - 150, finalY);
     doc.text(value, totalsX, finalY, { align: 'right' });
-    finalY += opts.bold ? 21 : 15;
+    finalY += bold ? 20 : 16;
   }
-  totalLine('Total MRP', fmtMoney(totals.mrpTotal));
-  if (totals.savings > 0.005) totalLine('You Saved', '-' + fmtMoney(totals.savings), { color: gold });
-  totalLine('Subtotal', fmtMoney(totals.subtotal));
-  if (totals.discount > 0.005) totalLine('Bill Discount', '-' + fmtMoney(totals.discount));
-  if (totals.tax > 0.005) { totalLine('CGST', fmtMoney(totals.cgst)); totalLine('SGST', fmtMoney(totals.sgst)); }
+  totalLine('Subtotal', fmtMoney(subtotal));
+  totalLine('Discount', '-' + fmtMoney(disc));
+  if (tax > 0) totalLine(`Tax (${inv.taxRate || settings.taxRate}%)`, fmtMoney(tax));
   doc.setDrawColor(...accent); doc.setLineWidth(0.8);
-  doc.line(totalsLabelX, finalY - 11, totalsX, finalY - 11);
-  totalLine('Grand Total', fmtMoney(totals.total), { bold: true });
+  doc.line(totalsX - 150, finalY - 12, totalsX, finalY - 12);
+  totalLine('Total', fmtMoney(inv.total), true);
 
-  // ---- Footer ----
-  const footY = Math.max(finalY + 30, pageHeight - 90);
-  doc.setDrawColor(...[227, 222, 205]); doc.setLineWidth(0.6);
-  doc.line(margin, footY, pageWidth - margin, footY);
   doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(...muted);
-  doc.text('Thank you for your business — get well soon.', margin, footY + 18);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...[160, 168, 158]);
-  doc.text('This is a computer-generated invoice and does not require a physical signature.', margin, footY + 32);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...muted);
-  doc.text('Authorized Signatory', pageWidth - margin, footY + 32, { align: 'right' });
-  doc.setDrawColor(...[200, 196, 180]);
-  doc.line(pageWidth - margin - 110, footY + 22, pageWidth - margin, footY + 22);
+  doc.text('Thank you for your business — get well soon.', margin, finalY + 26);
 
-  return doc;
-}
-function downloadInvoicePdf(inv) {
-  const doc = buildInvoicePdfDoc(inv);
   doc.save(`Invoice_${inv.id}.pdf`);
   toast('PDF downloaded', 'success');
-}
-async function shareInvoicePdf(inv) {
-  try {
-    const doc = buildInvoicePdfDoc(inv);
-    const blob = doc.output('blob');
-    const file = new File([blob], `Invoice_${inv.id}.pdf`, { type: 'application/pdf' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Invoice ' + inv.id, text: `Invoice ${inv.id} from ${settings.bizName}` });
-      return;
-    }
-  } catch (e) { if (e && e.name === 'AbortError') return; }
-  downloadInvoicePdf(inv);
 }
 
 /* =========================================
@@ -1617,7 +1308,6 @@ function populateSettingsForm() {
   $('set-low-stock').value = settings.lowStockThreshold;
   $('set-exp-days').value = settings.expiryWarningDays;
   $('set-block-expired').checked = settings.blockExpired;
-  $('set-sound-enabled').checked = localPrefs.soundEnabled;
 }
 function saveSettingsForm() {
   settings.bizName = $('set-biz-name').value.trim() || 'EkPharma';
@@ -1629,8 +1319,6 @@ function saveSettingsForm() {
   settings.lowStockThreshold = parseInt($('set-low-stock').value, 10) || 0;
   settings.expiryWarningDays = parseInt($('set-exp-days').value, 10) || 0;
   settings.blockExpired = $('set-block-expired').checked;
-  localPrefs.soundEnabled = $('set-sound-enabled').checked;
-  localStorage.setItem('ek_prefs_sound', localPrefs.soundEnabled ? '1' : '0');
   saveSettingsLocal();
   renderUI();
   toast('Settings saved', 'success');
@@ -1639,8 +1327,8 @@ function saveSettingsForm() {
 
 function exportInventoryCSV() {
   if (!inventory.length) { toast('No inventory to export', 'warn'); return; }
-  const header = ['Barcode', 'Name', 'Batch', 'Mfg Date', 'Expiry Date', 'Quantity', 'MRP', 'Price', 'Discount %', 'GST %'];
-  const rows = inventory.map(i => [i.barcode, i.name, i.batch, i.mfg, i.exp, i.qty, i.mrp || 0, i.price, discountPct(i), itemGstRate(i)]);
+  const header = ['Barcode', 'Name', 'Batch', 'Mfg Date', 'Expiry Date', 'Quantity', 'Price'];
+  const rows = inventory.map(i => [i.barcode, i.name, i.batch, i.mfg, i.exp, i.qty, i.price]);
   const csv = [header, ...rows].map(r => r.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
@@ -1649,11 +1337,8 @@ function exportInventoryCSV() {
 }
 function exportInvoicesCSV() {
   if (!invoices.length) { toast('No invoices to export', 'warn'); return; }
-  const header = ['Invoice ID', 'Date', 'Customer Name', 'Customer Phone', 'Payment Method', 'Subtotal', 'Discount', 'CGST', 'SGST', 'Total', 'Savings', 'Items'];
-  const rows = invoices.map(i => {
-    const t = computeTotalsFromItems(i.items || [], i.discount || 0);
-    return [i.id, fmtDate(i.date), i.customerName, i.customerPhone, i.paymentMethod || 'Cash', t.subtotal.toFixed(2), t.discount.toFixed(2), t.cgst.toFixed(2), t.sgst.toFixed(2), t.total.toFixed(2), t.savings.toFixed(2), (i.items || []).map(it => `${it.name} x${it.qty}`).join('; ')];
-  });
+  const header = ['Invoice ID', 'Date', 'Customer Name', 'Customer Phone', 'Payment Method', 'Subtotal', 'Discount', 'Tax', 'Total', 'Items'];
+  const rows = invoices.map(i => [i.id, fmtDate(i.date), i.customerName, i.customerPhone, i.paymentMethod || 'Cash', i.subtotal, i.discount, i.tax, i.total, (i.items || []).map(it => `${it.name} x${it.qty}`).join('; ')]);
   const csv = [header, ...rows].map(r => r.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
@@ -1667,19 +1352,15 @@ function exportInvoicesCSV() {
 function renderDashboard() {
   const now = new Date();
   $('home-date-sub').innerText = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const todayInvoices = invoices.filter(i => { const d = new Date(i.date); return !isNaN(d) && isSameDay(d, now); });
-  const todaySales = todayInvoices.reduce((s, i) => s + i.total, 0);
+  const todaySales = invoices.filter(i => { const d = new Date(i.date); return !isNaN(d) && isSameDay(d, now); }).reduce((s, i) => s + i.total, 0);
   $('stat-today-sales').innerText = fmtMoney(todaySales);
-  $('stat-today-count').innerText = `${todayInvoices.length} bill${todayInvoices.length === 1 ? '' : 's'} today`;
   const invValue = inventory.reduce((s, i) => s + i.qty * i.price, 0);
   $('stat-inv-value').innerText = fmtMoney(invValue);
-  $('stat-inv-count').innerText = `${inventory.length} item${inventory.length === 1 ? '' : 's'}`;
   const lowCount = inventory.filter(i => i.qty > 0 && i.qty <= settings.lowStockThreshold).length;
   $('stat-low-stock').innerText = lowCount;
   const expCount = inventory.filter(i => { if (!i.exp) return false; const d = daysUntil(i.exp); return d !== null && d >= 0 && d <= settings.expiryWarningDays; }).length;
   $('stat-expiring').innerText = expCount;
   renderSalesTrend(now);
-  renderRecentInvoices();
 }
 function renderSalesTrend(now) {
   const days = [];
@@ -1695,47 +1376,25 @@ function renderSalesTrend(now) {
     return `<div class="trend-bar-wrap" title="${fmtMoney(totals[i])}"><div class="trend-bar-amt">${totals[i] > 0 ? Math.round(totals[i]) : ''}</div><div class="trend-bar ${isToday ? 'today' : ''}" style="height:${heightPct}%;"></div><div class="trend-bar-label">${d.toLocaleDateString('en-IN', { weekday: 'short' })}</div></div>`;
   }).join('')}</div>`;
 }
-function renderRecentInvoices() {
-  const el = $('recent-invoices-card');
-  if (!el) return;
-  const recent = invoices.slice(0, 4);
-  el.innerHTML = recent.length ? recent.map(i => `
-    <div class="recent-row" onclick="switchTab('invoices'); viewInvoice('${i.id}')">
-      <div><div class="rr-name">${escapeHtml(i.customerName)}</div><div class="rr-sub">#${i.id} · ${fmtDate(i.date)}</div></div>
-      <div class="price" style="font-size:14px;">${fmtMoney(i.total)}</div>
-    </div>`).join('') : `<div class="empty-state" style="padding:26px 10px;"><p>No invoices yet.</p></div>`;
-}
 function renderUI() {
   const cartList = $('cart-list'), cartSum = $('cart-summary');
   $('cart-count').innerText = cart.length ? cart.reduce((s, c) => s + c.qty, 0) : '';
   if (cart.length) {
     cartList.innerHTML = cart.map(i => `
-      <div class="cart-item">
-        <div class="cart-item-top">
-          <div class="card-col"><div class="card-title">${escapeHtml(i.name)}</div><div class="card-sub">Batch ${escapeHtml(i.batch || 'N/A')}</div></div>
-          ${priceMetaHtml(i)}
-        </div>
-        <div class="cart-item-bottom">
-          <div class="card-sub mono">${fmtMoney(i.price)} × ${i.qty} = <b style="color:var(--ink);">${fmtMoney(i.price * i.qty)}</b></div>
-          <div class="qty-stepper">
-            <button class="btn-qty" onclick="updateCartQty('${i.barcode}', -1)">-</button>
-            <div class="qty-input-inline">${i.qty}</div>
-            <button class="btn-qty" onclick="updateCartQty('${i.barcode}', 1)">+</button>
-            <button class="btn-qty btn-del" onclick="updateCartQty('${i.barcode}', -9999)">×</button>
-          </div>
+      <div class="card">
+        <div class="card-col"><div class="card-title">${escapeHtml(i.name)}</div><div class="card-sub">${fmtMoney(i.price)} each</div></div>
+        <div class="qty-stepper">
+          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', -1)">-</button>
+          <div class="qty-input-inline">${i.qty}</div>
+          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', 1)">+</button>
+          <button class="btn-qty btn-del" onclick="updateCartQty('${i.barcode}', -9999)">×</button>
         </div>
       </div>`).join('');
     const totals = computeCartTotals();
-    $('sum-mrp').innerText = fmtMoney(totals.mrpTotal);
-    if (totals.savings > 0.005) { $('sum-savings-row').style.display = 'flex'; $('sum-savings').innerText = fmtMoney(totals.savings); }
-    else $('sum-savings-row').style.display = 'none';
     $('sum-subtotal').innerText = fmtMoney(totals.subtotal);
-    if (totals.discount > 0.005) { $('sum-discount-row').style.display = 'flex'; $('sum-discount').innerText = '-' + fmtMoney(totals.discount); }
-    else $('sum-discount-row').style.display = 'none';
-    if (totals.tax > 0.005) {
-      $('sum-cgst-row').style.display = 'flex'; $('sum-sgst-row').style.display = 'flex';
-      $('sum-cgst').innerText = fmtMoney(totals.cgst); $('sum-sgst').innerText = fmtMoney(totals.sgst);
-    } else { $('sum-cgst-row').style.display = 'none'; $('sum-sgst-row').style.display = 'none'; }
+    $('sum-discount').innerText = '-' + fmtMoney(totals.discount);
+    if (settings.taxRate > 0) { $('sum-tax-row').style.display = 'flex'; $('sum-tax-label').innerText = `Tax (${settings.taxRate}%)`; $('sum-tax').innerText = fmtMoney(totals.tax); }
+    else $('sum-tax-row').style.display = 'none';
     $('cart-total').innerText = fmtMoney(totals.total);
     cartSum.style.display = 'block';
   } else {
@@ -1752,9 +1411,9 @@ function renderUI() {
     const status = computeStockStatus(i);
     return `<div class="card clickable ${status.strip}" onclick="processBarcode('${i.barcode.replace(/'/g, "\\'")}', 'stock')">
       <div class="card-col"><div class="card-title">${escapeHtml(i.name)}</div>
-        <div class="card-sub"><span class="badge">Batch ${escapeHtml(i.batch || 'N/A')}</span><span class="badge">Exp ${escapeHtml(i.exp || 'N/A')}</span><span class="badge ${status.cls}">${status.label}</span></div>
+        <div class="card-sub"><span class="badge">Batch: ${escapeHtml(i.batch || 'N/A')}</span><span class="badge">Exp: ${escapeHtml(i.exp || 'N/A')}</span><span class="badge ${status.cls}">${status.label}</span></div>
       </div>
-      ${priceMetaHtml(i, { qtyLabel: 'Qty ' + i.qty })}
+      <div class="card-col" style="align-items:flex-end;"><div class="price">${fmtMoney(i.price)}</div><div class="card-sub">Qty: ${i.qty}</div></div>
     </div>`;
   }).join('') : `<div class="empty-state"><svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><p>${q || stockFilter !== 'all' ? 'No items match your search' : 'No inventory added yet — scan or add a medicine'}</p></div>`;
 
@@ -1773,10 +1432,6 @@ function renderUI() {
 /* =========================================
    INIT
    ========================================= */
-(function initSoundPref() {
-  const soundPref = localStorage.getItem('ek_prefs_sound');
-  localPrefs.soundEnabled = soundPref === null ? true : soundPref === '1';
-})();
 setAuthMode('login');
 initAuth();
 </script>
