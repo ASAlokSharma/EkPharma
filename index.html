@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>EkPharma</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -56,13 +56,13 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
 html{-webkit-text-size-adjust:100%;}
-body{background:var(--bg);color:var(--ink);font-family:'Manrope',sans-serif;font-size:15px;line-height:1.45;overscroll-behavior-y:none;}
-.mono{font-family:'IBM Plex Mono',monospace;}
+body{background:var(--bg);color:var(--ink);font-family:'Figtree',sans-serif;font-size:15px;line-height:1.45;overscroll-behavior-y:none;}
+.mono{font-family:'Inter',monospace;}
 ::selection{background:var(--green-soft);}
 button{font-family:inherit;}
 input,select{font-family:inherit;}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
-h1,h2,h3{font-family:'Manrope',sans-serif;}
+h1,h2,h3{font-family:'Figtree',sans-serif;}
 
 /* Logo — the <img> tags start empty; a single JS constant near the
    top of the <script> block fills them in from your GitHub repo. */
@@ -157,7 +157,7 @@ input.err{border-color:var(--red);}
 .badge-ok{background:var(--green-soft);color:var(--green-dark);}
 .badge-warn{background:var(--amber-soft);color:var(--amber);}
 .badge-danger{background:var(--red-soft);color:var(--red);}
-.price{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:var(--blue);}
+.price{font-family:'Inter',monospace;font-weight:700;font-size:16px;color:var(--blue);}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
 .empty-state svg{opacity:.3;margin-bottom:10px;}
 .empty-state p{font-size:13.5px;font-weight:600;}
@@ -165,7 +165,7 @@ input.err{border-color:var(--red);}
 .qty-stepper{display:flex;align-items:center;gap:6px;background:var(--surface-tint);padding:4px;border-radius:var(--r-pill);border:1px solid var(--border);flex-shrink:0;}
 .btn-qty{width:27px;height:27px;border-radius:50%;border:none;background:#fff;color:var(--ink);font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08);}
 .btn-del{color:var(--red);background:var(--red-soft);}
-.qty-input-inline{width:32px;text-align:center;font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+.qty-input-inline{width:32px;text-align:center;font-size:14px;font-weight:700;font-family:'Inter',monospace;}
 
 /* Dashboard */
 .greeting-card{background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);border-radius:var(--r-lg);padding:20px;color:#fff;margin-bottom:18px;box-shadow:var(--shadow);}
@@ -181,7 +181,7 @@ input.err{border-color:var(--red);}
 .stat-icon.amber{background:var(--amber-soft);color:var(--amber);}
 .stat-icon.red{background:var(--red-soft);color:var(--red);}
 .stat-label{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px;}
-.stat-value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;}
+.stat-value{font-family:'Inter',monospace;font-size:20px;font-weight:700;}
 
 .quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0;}
 .qa-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 12px;text-align:center;cursor:pointer;}
@@ -194,7 +194,7 @@ input.err{border-color:var(--red);}
 .trend-bar{width:100%;max-width:28px;border-radius:8px 8px 3px 3px;background:var(--green-soft);min-height:3px;transition:height .3s ease;}
 .trend-bar.today{background:linear-gradient(180deg,var(--green) 0%,var(--green-dark) 100%);}
 .trend-bar-label{font-size:10px;color:var(--muted);font-weight:700;}
-.trend-bar-amt{font-size:9.5px;color:var(--muted-2);font-family:'IBM Plex Mono',monospace;}
+.trend-bar-amt{font-size:9.5px;color:var(--muted-2);font-family:'Inter',monospace;}
 
 .alert-row{display:flex;gap:10px;margin-bottom:6px;}
 .alert-chip{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;}
@@ -202,14 +202,14 @@ input.err{border-color:var(--red);}
 .alert-chip .a-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .alert-chip .a-icon.amber{background:var(--amber-soft);color:var(--amber);}
 .alert-chip .a-icon.red{background:var(--red-soft);color:var(--red);}
-.alert-chip .a-num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;}
+.alert-chip .a-num{font-family:'Inter',monospace;font-weight:700;font-size:16px;}
 .alert-chip .a-lbl{font-size:10.5px;color:var(--muted);font-weight:700;}
 
 .mini-invoice-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border-soft);}
 .mini-invoice-row:last-child{border-bottom:none;}
 .mini-invoice-row .mi-id{font-weight:700;font-size:13.5px;}
 .mini-invoice-row .mi-sub{font-size:11.5px;color:var(--muted);}
-.mini-invoice-row .mi-amt{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;color:var(--blue);}
+.mini-invoice-row .mi-amt{font-family:'Inter',monospace;font-weight:700;font-size:14px;color:var(--blue);}
 
 .summary-row{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);font-weight:600;padding:5px 0;}
 .summary-row.total{font-size:18px;font-weight:800;color:var(--ink);padding-top:12px;margin-top:6px;border-top:1px solid var(--border);}
@@ -279,12 +279,12 @@ input.err{border-color:var(--red);}
 .an-summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px;}
 .an-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;text-align:center;}
 .an-summary-card .as-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;}
-.an-summary-card .as-value{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--blue);}
+.an-summary-card .as-value{font-family:'Inter',monospace;font-size:15px;font-weight:700;color:var(--blue);}
 .bar-list-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .bar-list-rank{width:20px;font-size:12px;font-weight:800;color:var(--muted-2);flex-shrink:0;}
 .bar-list-body{flex:1;min-width:0;}
 .bar-list-top{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px;gap:8px;}
-.bar-list-top span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--blue);flex-shrink:0;}
+.bar-list-top span:last-child{font-family:'Inter',monospace;color:var(--blue);flex-shrink:0;}
 .bar-list-track{height:8px;border-radius:var(--r-pill);background:var(--surface-tint);overflow:hidden;}
 .bar-list-fill{height:100%;border-radius:var(--r-pill);background:linear-gradient(90deg,var(--green) 0%,var(--green-dark) 100%);}
 .split-bar{display:flex;height:14px;border-radius:var(--r-pill);overflow:hidden;margin:12px 0 14px;background:var(--surface-tint);}
@@ -294,7 +294,7 @@ input.err{border-color:var(--red);}
 .split-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .health-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .health-cell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 8px;text-align:center;}
-.health-cell .hc-num{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:700;}
+.health-cell .hc-num{font-family:'Inter',monospace;font-size:17px;font-weight:700;}
 .health-cell .hc-lbl{font-size:9.5px;color:var(--muted);font-weight:700;margin-top:3px;}
 
 @media print{.nav,.appbar{display:none!important;}}
