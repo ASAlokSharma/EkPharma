@@ -9,6 +9,7 @@
 <title>EkPharma</title>
 <link rel="stylesheet" href="style.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -60,7 +61,7 @@
   </div>
   <div class="header-actions">
     <button class="icon-btn" onclick="openSettings()" aria-label="Settings">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="2.6"></circle><path d="M15.4 11a1.3 1.3 0 00.26 1.44l.05.05a1.6 1.6 0 11-2.26 2.26l-.05-.05a1.3 1.3 0 00-1.44-.26 1.3 1.3 0 00-.79 1.2v.16a1.6 1.6 0 01-3.2 0v-.08a1.3 1.3 0 00-.85-1.19 1.3 1.3 0 00-1.44.26l-.05.05a1.6 1.6 0 11-2.26-2.26l.05-.05a1.3 1.3 0 00.26-1.44v-.08a1.3 1.3 0 00-1.2-.79H2A1.6 1.6 0 012 8h.08a1.3 1.3 0 001.19-.85 1.3 1.3 0 00-.26-1.44l-.05-.05a1.6 1.6 0 112.26-2.26l.05.05a1.3 1.3 0 001.44.26h.08a1.3 1.3 0 00.79-1.2V2.4a1.6 1.6 0 013.2 0v.08a1.3 1.3 0 00.79 1.19 1.3 1.3 0 001.44-.26l.05-.05a1.6 1.6 0 112.26 2.26l-.05.05a1.3 1.3 0 00-.26 1.44v.08a1.3 1.3 0 001.2.79H16a1.6 1.6 0 010 3.2h-.08a1.3 1.3 0 00-1.2.79z"></path></svg>
+      <span class="material-symbols-rounded" style="font-size:18px;">settings</span>
     </button>
   </div>
 </div>
@@ -75,22 +76,22 @@
 
   <div class="stat-grid">
     <div class="stat-card">
-      <div class="stat-icon green"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1.5 8.5l3-3 2.5 2.5 4.5-4.5M11.5 3.5h2v2"></path></svg></div>
+      <div class="stat-icon green"><span class="material-symbols-rounded" style="font-size:15px;">trending_up</span></div>
       <div class="stat-label">Today's Sales</div>
       <div class="stat-value" id="stat-today-sales">₹0.00</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon blue"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1.5 4.5L7 2l5.5 2.5-5.5 2.5zM1.5 4.5v6L7 13m0-3.5v3.5m0-3.5l5.5-2.5v6L7 13"></path></svg></div>
+      <div class="stat-icon blue"><span class="material-symbols-rounded" style="font-size:15px;">inventory_2</span></div>
       <div class="stat-label">Inventory Value</div>
       <div class="stat-value" id="stat-inv-value">₹0.00</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon amber"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v3.6M7 10.4h.01"></path><circle cx="7" cy="7" r="6"></circle></svg></div>
+      <div class="stat-icon amber"><span class="material-symbols-rounded" style="font-size:15px;">error</span></div>
       <div class="stat-label">Low Stock</div>
       <div class="stat-value" id="stat-low-stock">0</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon red"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="6"></circle><path d="M7 4.2v3.2l2 1.6"></path></svg></div>
+      <div class="stat-icon red"><span class="material-symbols-rounded" style="font-size:15px;">schedule</span></div>
       <div class="stat-label">Expiring Soon</div>
       <div class="stat-value" id="stat-expiring">0</div>
     </div>
@@ -98,11 +99,11 @@
 
   <div class="quick-actions">
     <div class="qa-btn" onclick="switchTab('bill')">
-      <div class="qa-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3v12M3 9h12"></path></svg></div>
+      <div class="qa-icon"><span class="material-symbols-rounded" style="font-size:18px;">add</span></div>
       <div>New Bill</div>
     </div>
     <div class="qa-btn" onclick="switchTab('stock'); setTimeout(()=>startScanner('stock'), 250)">
-      <div class="qa-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 6h13M5 10h.01m4 0h.01M3.5 14h11a1.5 1.5 0 001.5-1.5v-7A1.5 1.5 0 0014.5 4h-11A1.5 1.5 0 002 5.5v7A1.5 1.5 0 003.5 14z"></path></svg></div>
+      <div class="qa-icon"><span class="material-symbols-rounded" style="font-size:18px;">add_box</span></div>
       <div>Add Stock</div>
     </div>
   </div>
@@ -110,11 +111,11 @@
   <div class="section-label">Alerts</div>
   <div class="alert-row">
     <div class="alert-chip" onclick="switchTab('stock'); setStockFilter('low')">
-      <div class="a-icon amber"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v3.6M7 10.4h.01"></path><circle cx="7" cy="7" r="6"></circle></svg></div>
+      <div class="a-icon amber"><span class="material-symbols-rounded" style="font-size:15px;">error</span></div>
       <div><div class="a-num" id="alert-low-count">0</div><div class="a-lbl">Low stock items</div></div>
     </div>
     <div class="alert-chip" onclick="switchTab('stock'); setStockFilter('expiring')">
-      <div class="a-icon red"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="6"></circle><path d="M7 4.2v3.2l2 1.6"></path></svg></div>
+      <div class="a-icon red"><span class="material-symbols-rounded" style="font-size:15px;">schedule</span></div>
       <div><div class="a-num" id="alert-exp-count">0</div><div class="a-lbl">Expiring soon</div></div>
     </div>
   </div>
@@ -137,7 +138,7 @@
   </div>
 
   <button class="btn btn-primary" onclick="startScanner('bill')" style="margin:14px 0;">
-    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h14M5.5 12h1m3 0h1M3.5 15h9a2 2 0 002-2V5a2 2 0 00-2-2h-9a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+    <span class="material-symbols-rounded" style="font-size:17px;">barcode_scanner</span>
     Scan Barcode
   </button>
   <div class="input-group"><input type="text" id="manual-bill" placeholder="Or enter barcode manually…" onkeypress="if(event.key==='Enter') handleManual('bill')"></div>
@@ -160,7 +161,7 @@
     <div class="summary-row total"><span>Total Amount</span><span id="cart-total" class="price">₹0.00</span></div>
     <div class="btn-row" style="margin-top:14px;">
       <button class="btn btn-outline" onclick="clearCart()" style="flex:0 0 auto;width:auto;padding:14px 16px;">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5h14M6.5 5V3.5a1 1 0 011-1h3a1 1 0 011 1V5m2 0-.7 10a1.5 1.5 0 01-1.5 1.4H6.7a1.5 1.5 0 01-1.5-1.4L4.5 5"></path></svg>
+        <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
       </button>
       <button class="btn btn-primary" onclick="generateInvoice()">Complete &amp; Checkout</button>
     </div>
@@ -174,11 +175,11 @@
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startScanner('stock')">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h14M5.5 12h1m3 0h1M3.5 15h9a2 2 0 002-2V5a2 2 0 00-2-2h-9a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+      <span class="material-symbols-rounded" style="font-size:17px;">barcode_scanner</span>
       Scan Barcode
     </button>
     <button class="btn btn-outline" style="flex:0 0 auto;width:auto;padding:14px 16px;" onclick="openAddStockForm()" title="Add new item">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 2v14M2 9h14"></path></svg>
+      <span class="material-symbols-rounded" style="font-size:18px;">add</span>
     </button>
   </div>
 
@@ -188,7 +189,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <h3 style="font-size:16px;font-weight:800;" id="stock-form-title">Medicine Details</h3>
       <button class="icon-btn" style="width:30px;height:30px;" onclick="closeStockForm()" aria-label="Close">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg>
+        <span class="material-symbols-rounded" style="font-size:14px;">close</span>
       </button>
     </div>
     <div class="input-group"><label>Barcode</label><input type="text" id="st-code" placeholder="Scan or type barcode"></div>
@@ -215,7 +216,7 @@
     <div style="height:14px;"></div>
     <div class="btn-row">
       <button class="btn btn-danger-outline" style="flex:0 0 auto;width:auto;padding:14px 16px;display:none;" id="btn-delete-stock" onclick="deleteStockConfirm()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5h14M6.5 5V3.5a1 1 0 011-1h3a1 1 0 011 1V5m2 0-.7 10a1.5 1.5 0 01-1.5 1.4H6.7a1.5 1.5 0 01-1.5-1.4L4.5 5"></path></svg>
+        <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
       </button>
       <button class="btn btn-primary" onclick="saveStock()">Save to Inventory</button>
     </div>
@@ -223,7 +224,7 @@
 
   <div class="section-label" style="margin-top:20px;">Current Stock</div>
   <div class="search-wrap" style="margin-bottom:10px;">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15l-3.1-3.1M13 7.5A5.5 5.5 0 112 7.5a5.5 5.5 0 0111 0z"></path></svg>
+    <span class="material-symbols-rounded" style="font-size:16px;">search</span>
     <input type="text" id="stock-search" placeholder="Search by name, barcode or batch…" oninput="renderUI()">
   </div>
   <div class="chip-row" style="margin-bottom:14px;">
@@ -273,7 +274,7 @@
     <h2 class="page-title">Invoices</h2>
     <p class="page-sub">View completed transactions and download PDF receipts.</p>
     <div class="search-wrap" style="margin-bottom:14px;">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15l-3.1-3.1M13 7.5A5.5 5.5 0 112 7.5a5.5 5.5 0 0111 0z"></path></svg>
+      <span class="material-symbols-rounded" style="font-size:16px;">search</span>
       <input type="text" id="invoice-search" placeholder="Search by name, phone or invoice ID…" oninput="renderUI()">
     </div>
     <div id="invoice-list"></div>
@@ -304,7 +305,7 @@
     </div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="deleteInvoiceConfirm()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5h14M6.5 5V3.5a1 1 0 011-1h3a1 1 0 011 1V5m2 0-.7 10a1.5 1.5 0 01-1.5 1.4H6.7a1.5 1.5 0 01-1.5-1.4L4.5 5"></path></svg>
+        <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
       </button>
       <button class="btn btn-primary" id="btn-download-pdf">Download PDF Receipt</button>
     </div>
@@ -315,7 +316,7 @@
 <div id="screen-settings">
   <div class="settings-topbar">
     <button class="icon-btn" onclick="closeSettings()" aria-label="Back">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 15L5 9l6-6"></path></svg>
+      <span class="material-symbols-rounded" style="font-size:18px;">arrow_back</span>
     </button>
     <h2>Settings</h2>
   </div>
@@ -388,23 +389,23 @@
 <!-- Bottom Nav -->
 <div class="nav">
   <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
-    <div class="nav-pill"><svg fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10l1.5-1.5M3.5 8.5L10 2l6.5 6.5M4.5 7.5v8a1 1 0 001 1h3m8-9v9a1 1 0 01-1 1h-3m-5 0a1 1 0 001-1v-3a1 1 0 011-1h1a1 1 0 011 1v3a1 1 0 001 1m-5 0h5"></path></svg></div>
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">home</span></div>
     Home
   </div>
   <div class="nav-item" onclick="switchTab('bill')" id="nav-bill">
-    <div class="nav-pill"><svg fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 2h1.5l.3 1.5M5.5 10h7.5l3-6H4.2M5.5 10L4.2 3.5M5.5 10l-1.7 1.7c-.5.5-.1 1.3.5 1.3H13m0 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM6.5 13a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path></svg></div>
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">shopping_cart</span></div>
     Bill
   </div>
   <div class="nav-item" onclick="switchTab('stock')" id="nav-stock">
-    <div class="nav-pill"><svg fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5.5L9 2 3 5.5m12 0L9 9m6-3.5v7.5L9 17M3 5.5L9 9m-6-3.5v7.5L9 17M3 5.5v7.5l6 4"></path></svg></div>
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">inventory_2</span></div>
     Stock
   </div>
   <div class="nav-item" onclick="switchTab('analytics')" id="nav-analytics">
-    <div class="nav-pill"><svg fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 15V9m5 6V3m5 12v-5"></path></svg></div>
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">bar_chart</span></div>
     Analytics
   </div>
   <div class="nav-item" onclick="switchTab('invoices')" id="nav-invoices">
-    <div class="nav-pill"><svg fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 9h5m-5 3h5m1.5 4H5a1.5 1.5 0 01-1.5-1.5V3.5A1.5 1.5 0 015 2h4.2a.8.8 0 01.55.22l4.05 4.06a.8.8 0 01.2.53V14.5A1.5 1.5 0 0113 16z"></path></svg></div>
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">description</span></div>
     Invoices
   </div>
 </div>
@@ -413,14 +414,14 @@
 <div id="scanner-container">
   <div class="scanner-topbar">
     <button class="icon-btn" onclick="stopScanner()" aria-label="Close scanner">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l8 8M13 5l-8 8"></path></svg>
+      <span class="material-symbols-rounded" style="font-size:18px;">close</span>
     </button>
     <div style="display:flex;gap:8px;">
       <button class="icon-btn" id="torch-btn" style="display:none;" onclick="toggleTorch()" aria-label="Toggle flash">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 2L4 11h5v5l7-9h-5z"></path></svg>
+        <span class="material-symbols-rounded" style="font-size:16px;">bolt</span>
       </button>
       <button class="icon-btn" id="camera-switch-btn" style="display:none;" onclick="switchCamera()" aria-label="Switch camera">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v4h.5M14.5 10a6 6 0 01-11.5 1.5m11.5-4A6 6 0 013 9M14.5 14v-4h-.5"></path></svg>
+        <span class="material-symbols-rounded" style="font-size:16px;">cameraswitch</span>
       </button>
     </div>
   </div>
