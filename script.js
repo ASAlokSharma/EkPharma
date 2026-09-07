@@ -862,6 +862,29 @@ function exportInvoicesCSV() {
   const a = document.createElement('a'); a.href = url; a.download = `EkPharma_Invoices_${todayISO()}.csv`; a.click();
   URL.revokeObjectURL(url); toast('Invoices CSV downloaded', 'success');
 }
+// One row per item sold (not per invoice) — the feed to use for any per-product
+// analysis (reorder forecasting, best-sellers, etc). Each item already carries
+// barcode/batch/price/mrp/tax from the cart, we just weren't exporting them before.
+function exportSalesDetailCSV() {
+  if (!invoices.length) { toast('No invoices to export', 'warn'); return; }
+  const header = ['Invoice ID', 'Date', 'Barcode', 'Item Name', 'Batch', 'Qty', 'Unit Price', 'Unit MRP', 'Tax Pct', 'Line Subtotal', 'Customer Name', 'Customer Phone', 'Payment Method'];
+  const rows = [];
+  invoices.forEach(inv => {
+    (inv.items || []).forEach(it => {
+      rows.push([
+        inv.id, fmtDate(inv.date), it.barcode || '', it.name, it.batch || '',
+        it.qty, it.price, it.mrp || it.price, it.taxPct || 0,
+        +(it.price * it.qty).toFixed(2),
+        inv.customerName, inv.customerPhone, inv.paymentMethod || 'Cash'
+      ]);
+    });
+  });
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `EkPharma_SalesDetail_${todayISO()}.csv`; a.click();
+  URL.revokeObjectURL(url); toast('Sales detail CSV downloaded', 'success');
+}
 
 /* =========================================
    RENDER — DASHBOARD
