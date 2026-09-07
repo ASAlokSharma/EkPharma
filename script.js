@@ -618,6 +618,27 @@ function computeCartTotals() {
   const total = Math.max(subtotal + tax - additionalDiscount, 0);
   return { totalMRP, subtotal, savings, tax, additionalDiscount, total };
 }
+// Sequential invoice numbers: EP-26SEP00001, EP-26SEP00002, ... — 2-digit year
+// + 3-letter month + a sequence that resets each calendar month. Sequence is
+// zero-padded to 5 digits normally; in the practically-impossible case a
+// single month exceeds 99999 invoices, it just grows to 6+ digits rather than
+// blocking billing. Old OP-xxxxxx / EP-000001-style invoices (from before
+// this change) are ignored for numbering, not renumbered.
+function invoicePrefixForDate(d) {
+  const yy = String(d.getFullYear()).slice(-2);
+  const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
+  return `EP-${yy}${mmm}`;
+}
+function nextInvoiceId() {
+  const prefix = invoicePrefixForDate(new Date());
+  const re = new RegExp('^' + prefix + '(\\d+)$');
+  let maxNum = 0;
+  for (const inv of invoices) {
+    const m = re.exec(inv.id);
+    if (m) { const n = parseInt(m[1], 10); if (n > maxNum) maxNum = n; }
+  }
+  return prefix + String(maxNum + 1).padStart(5, '0');
+}
 async function generateInvoice() {
   if (!cart.length) return;
   const custName = $('cust-name').value.trim() || 'Walk-in Customer';
@@ -632,7 +653,7 @@ async function generateInvoice() {
   cart.forEach(c => { pending.inventory[c.barcode] = true; });
   savePending();
 
-  const id = 'OP-' + Math.floor(100000 + Math.random() * 900000);
+  const id = nextInvoiceId();
   const date = new Date().toISOString();
   const invoice = { id, date, customerName: custName, customerPhone: custPhone, items: [...cart], totalMRP: totals.totalMRP, subtotal: totals.subtotal, savings: totals.savings, tax: totals.tax, discount: totals.additionalDiscount, paymentMethod, total: totals.total };
   invoices.unshift(invoice); saveLocalInvoices();
