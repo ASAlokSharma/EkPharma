@@ -450,6 +450,15 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="batch-picker-backdrop">
+  <div class="modal-sheet">
+    <h3 id="batch-picker-title">Select batch</h3>
+    <div id="batch-picker-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+    <button class="btn btn-outline btn-sm" id="batch-picker-newbatch-btn" style="width:100%;margin-bottom:10px;" onclick="addNewBatchFromPicker()">+ Add New Batch</button>
+    <button class="btn btn-outline" style="width:100%;" onclick="closeBatchPicker()">Cancel</button>
+  </div>
+</div>
+
 </div><!-- /#app-root -->
 
 <script src="script.js"></script>
