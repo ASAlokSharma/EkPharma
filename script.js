@@ -1104,6 +1104,36 @@ function renderAnalytics() {
 /* =========================================
    RENDER — everything else (cart, stock list, invoices list)
    ========================================= */
+// Aggregates a customer's full purchase history by phone number — visit
+// count, lifetime spend, last visit, and most-bought items — used to show a
+// summary card whenever the invoice search narrows to a single customer.
+function computeCustomerSummary(phone) {
+  const custInvoices = invoices.filter(i => (i.customerPhone || '') === phone);
+  if (!custInvoices.length) return null;
+  const sorted = [...custInvoices].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const totalSpent = custInvoices.reduce((s, i) => s + (i.total || 0), 0);
+  const productCounts = {};
+  custInvoices.forEach(inv => (inv.items || []).forEach(it => { productCounts[it.name] = (productCounts[it.name] || 0) + it.qty; }));
+  const topProducts = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  return { name: sorted[0].customerName, phone, visits: custInvoices.length, totalSpent, lastVisit: sorted[0].date, topProducts };
+}
+function renderCustomerSummaryCard(filteredInv) {
+  const phones = [...new Set(filteredInv.map(i => i.customerPhone || ''))].filter(p => p && p.toLowerCase() !== 'n/a');
+  if (phones.length !== 1) return '';
+  const s = computeCustomerSummary(phones[0]);
+  if (!s) return '';
+  return `<div class="detail-header" style="margin-bottom:14px;">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Customer</div>
+    <div style="font-weight:800;font-size:16px;">${escapeHtml(s.name)}</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:10px;">${escapeHtml(s.phone)}</div>
+    <div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:${s.topProducts.length ? '10px' : '0'};">
+      <div><div style="font-size:11px;color:var(--muted);">Visits</div><div style="font-weight:700;">${s.visits}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);">Total Spent</div><div style="font-weight:700;">${fmtMoney(s.totalSpent)}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);">Last Visit</div><div style="font-weight:700;">${fmtDate(s.lastVisit)}</div></div>
+    </div>
+    ${s.topProducts.length ? `<div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:5px;">Most bought</div>${s.topProducts.map(([n, q]) => `<span class="badge" style="margin-right:6px;margin-bottom:4px;">${escapeHtml(n)} ×${q}</span>`).join('')}</div>` : ''}
+  </div>`;
+}
 function renderUI() {
   const cartList = $('cart-list'), cartSum = $('cart-summary');
   $('cart-count').innerText = cart.length ? cart.reduce((s, c) => s + c.qty, 0) : '';
@@ -1156,11 +1186,12 @@ function renderUI() {
 
   const iq = ($('invoice-search') ? $('invoice-search').value : '').trim().toLowerCase();
   const filteredInv = invoices.filter(i => !iq || i.id.toLowerCase().includes(iq) || (i.customerName || '').toLowerCase().includes(iq) || (i.customerPhone || '').toLowerCase().includes(iq));
-  $('invoice-list').innerHTML = filteredInv.length ? filteredInv.map(i => `
+  const custSummaryHtml = iq ? renderCustomerSummaryCard(filteredInv) : '';
+  $('invoice-list').innerHTML = custSummaryHtml + (filteredInv.length ? filteredInv.map(i => `
     <div class="card clickable" onclick="viewInvoice('${i.id}')">
       <div class="card-col"><div class="card-title">#${i.id}</div><div class="card-sub">${escapeHtml(i.customerName)} · ${fmtDate(i.date)}</div></div>
       <div class="price">${fmtMoney(i.total)}</div>
-    </div>`).join('') : `<div class="empty-state"><svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>${iq ? 'No invoices match your search' : 'No invoices found'}</p></div>`;
+    </div>`).join('') : `<div class="empty-state"><svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>${iq ? 'No invoices match your search' : 'No invoices found'}</p></div>`);
 
   updateSyncIndicator();
   renderDashboard();
