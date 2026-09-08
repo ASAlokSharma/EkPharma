@@ -16,11 +16,19 @@ let authMode = 'login';
 let inventory = [], invoices = [], cart = [];
 let settings = { ...DEFAULT_SETTINGS };
 let pending = { inventory: {}, invoices: {} };
-let discount = 0, paymentMethod = 'Cash', stockFilter = 'all', editingBarcode = null, editingInvoiceId = null;
+let discount = 0, paymentMethod = 'Cash', stockFilter = 'all', editingBarcode = null, editingBatch = null, editingInvoiceId = null;
+let batchPickerMode = null, batchPickerBarcode = null;
 let syncInProgress = false, lastSyncError = null;
 let realtimeChannels = [];
 
 function $(id) { return document.getElementById(id); }
+// Inventory is keyed by barcode+batch (not barcode alone) — the same product
+// can legitimately have several batches in stock at once, each with its own
+// expiry/qty. `invKey` is the canonical identity used for local state, the
+// pending-sync queue, and Supabase upserts/deletes.
+function invKey(barcode, batch) { return String(barcode) + '::' + String(batch || ''); }
+function batchesForBarcode(barcode) { return inventory.filter(i => i.barcode === barcode); }
+function findInventoryItem(barcode, batch) { return inventory.find(i => i.barcode === barcode && (i.batch || '') === (batch || '')); }
 function escapeHtml(str) {
   return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 }
@@ -173,13 +181,14 @@ async function loadCloudData() {
   renderUI();
 }
 function mergeInventory(cloudArr) {
-  const byBarcode = {}; inventory.forEach(i => { byBarcode[i.barcode] = i; });
+  const byKey = {}; inventory.forEach(i => { byKey[invKey(i.barcode, i.batch)] = i; });
   cloudArr.forEach(ci => {
-    const barcode = String(ci.barcode);
-    if (pending.inventory[barcode]) return;
-    byBarcode[barcode] = { barcode, name: String(ci.name || ''), batch: String(ci.batch || ''), mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0, mrp: Number(ci.mrp) || Number(ci.price) || 0, taxPct: Number(ci.taxPct) || 0 };
+    const barcode = String(ci.barcode), batch = String(ci.batch || '');
+    const key = invKey(barcode, batch);
+    if (pending.inventory[key]) return;
+    byKey[key] = { barcode, name: String(ci.name || ''), batch, mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0, mrp: Number(ci.mrp) || Number(ci.price) || 0, taxPct: Number(ci.taxPct) || 0 };
   });
-  inventory = Object.values(byBarcode); saveLocalInventory();
+  inventory = Object.values(byKey); saveLocalInventory();
 }
 function mergeInvoices(cloudArr) {
   const byId = {}; invoices.forEach(i => { byId[i.id] = i; });
@@ -188,14 +197,15 @@ function mergeInvoices(cloudArr) {
   saveLocalInvoices();
 }
 async function syncInventoryItem(item) {
+  const key = invKey(item.barcode, item.batch);
   try {
-    const { error } = await db.from('inventory').upsert({ barcode: item.barcode, name: item.name, batch: item.batch, mfg: item.mfg, exp: item.exp, qty: item.qty, price: item.price, mrp: item.mrp, taxPct: item.taxPct }, { onConflict: 'pharmacy_id,barcode' });
+    const { error } = await db.from('inventory').upsert({ barcode: item.barcode, name: item.name, batch: item.batch, mfg: item.mfg, exp: item.exp, qty: item.qty, price: item.price, mrp: item.mrp, taxPct: item.taxPct }, { onConflict: 'pharmacy_id,barcode,batch' });
     if (error) throw error;
-    delete pending.inventory[item.barcode]; savePending(); lastSyncError = null; return true;
-  } catch (err) { console.error('syncInventoryItem', err); lastSyncError = err.message; pending.inventory[item.barcode] = true; savePending(); return false; }
+    delete pending.inventory[key]; savePending(); lastSyncError = null; return true;
+  } catch (err) { console.error('syncInventoryItem', err); lastSyncError = err.message; pending.inventory[key] = true; savePending(); return false; }
 }
-async function deleteInventoryCloud(barcode) {
-  try { await db.from('inventory').delete().eq('barcode', barcode); } catch (e) { console.error(e); }
+async function deleteInventoryCloud(barcode, batch) {
+  try { await db.from('inventory').delete().eq('barcode', barcode).eq('batch', batch || ''); } catch (e) { console.error(e); }
 }
 async function syncInvoiceRow(inv) {
   try {
@@ -216,9 +226,11 @@ async function syncSettingsToCloud() {
 async function flushPending() {
   if (syncInProgress || !navigator.onLine) return;
   syncInProgress = true;
-  for (const bc of Object.keys(pending.inventory)) {
-    const item = inventory.find(i => i.barcode === bc);
-    if (item) await syncInventoryItem(item); else { delete pending.inventory[bc]; savePending(); }
+  for (const key of Object.keys(pending.inventory)) {
+    const sep = key.lastIndexOf('::');
+    const barcode = key.slice(0, sep), batch = key.slice(sep + 2);
+    const item = findInventoryItem(barcode, batch);
+    if (item) await syncInventoryItem(item); else { delete pending.inventory[key]; savePending(); }
   }
   for (const id of Object.keys(pending.invoices)) {
     const inv = invoices.find(i => i.id === id);
@@ -245,12 +257,15 @@ function setupRealtime() {
   );
 }
 function handleInventoryRealtime(payload) {
-  if (payload.eventType === 'DELETE') { inventory = inventory.filter(i => i.barcode !== (payload.old && payload.old.barcode)); }
-  else {
-    const ci = payload.new; const barcode = String(ci.barcode);
-    if (pending.inventory[barcode]) return;
-    const item = { barcode, name: String(ci.name || ''), batch: String(ci.batch || ''), mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0, mrp: Number(ci.mrp) || Number(ci.price) || 0, taxPct: Number(ci.taxPct) || 0 };
-    const idx = inventory.findIndex(i => i.barcode === barcode);
+  if (payload.eventType === 'DELETE') {
+    const oldBarcode = payload.old && payload.old.barcode, oldBatch = payload.old && payload.old.batch;
+    inventory = inventory.filter(i => !(i.barcode === oldBarcode && (i.batch || '') === (oldBatch || '')));
+  } else {
+    const ci = payload.new; const barcode = String(ci.barcode), batch = String(ci.batch || '');
+    const key = invKey(barcode, batch);
+    if (pending.inventory[key]) return;
+    const item = { barcode, name: String(ci.name || ''), batch, mfg: ci.mfg || '', exp: ci.exp || '', qty: Number(ci.qty) || 0, price: Number(ci.price) || 0, mrp: Number(ci.mrp) || Number(ci.price) || 0, taxPct: Number(ci.taxPct) || 0 };
+    const idx = inventory.findIndex(i => i.barcode === barcode && (i.batch || '') === batch);
     if (idx > -1) inventory[idx] = item; else inventory.push(item);
   }
   saveLocalInventory(); renderUI();
@@ -436,50 +451,101 @@ function handleManual(target) {
 function processBarcode(code, target) {
   const cleanCode = String(code).trim();
   if (!cleanCode) return;
+  const matches = batchesForBarcode(cleanCode);
   if (target === 'bill') {
-    const item = inventory.find(i => i.barcode === cleanCode);
-    if (!item) { playError(); toast(`Barcode "${cleanCode}" not found in inventory.`, 'error'); return; }
-    if (item.qty <= 0) { playError(); toast(`${item.name} is out of stock.`, 'error'); return; }
-    if (settings.blockExpired && item.exp) {
-      const d = daysUntil(item.exp);
-      if (d !== null && d < 0) { playError(); toast(`${item.name} has expired (Batch ${item.batch || 'N/A'}). Sale blocked.`, 'error', 4200); return; }
-    }
-    const cartItem = cart.find(c => c.barcode === cleanCode);
-    if (cartItem) {
-      if (cartItem.qty < item.qty) { cartItem.qty++; playAdd(); }
-      else { playError(); toast('Stock limit reached for this item.', 'warn'); return; }
-    } else { cart.push({ ...item, qty: 1 }); playSuccess(); }
-    toast(`${item.name} added to cart`, 'success', 1600);
-    renderUI();
+    if (!matches.length) { playError(); toast(`Barcode "${cleanCode}" not found in inventory.`, 'error'); return; }
+    const inStock = matches.filter(i => i.qty > 0);
+    if (!inStock.length) { playError(); toast(`${matches[0].name} is out of stock.`, 'error'); return; }
+    if (inStock.length === 1) { sellFromBatch(inStock[0]); return; }
+    playSuccess();
+    openBatchPicker(cleanCode, inStock, 'bill');
   } else if (target === 'stock') {
     playSuccess();
-    editingBarcode = null;
-    $('add-stock-form').style.display = 'block';
-    $('st-code').value = cleanCode;
-    const existing = inventory.find(i => i.barcode === cleanCode);
-    if (existing) {
-      editingBarcode = existing.barcode;
-      $('stock-form-title').innerText = 'Edit Medicine';
-      $('st-name').value = existing.name; $('st-batch').value = existing.batch;
-      $('st-mfg').value = existing.mfg; $('st-exp').value = existing.exp;
-      $('st-qty').value = existing.qty; $('st-price').value = existing.price;
-      $('st-mrp').value = existing.mrp != null ? existing.mrp : existing.price;
-      $('st-tax').value = existing.taxPct != null ? existing.taxPct : settings.taxRate;
-      $('btn-delete-stock').style.display = 'flex';
-      toast(`Editing existing item: ${existing.name}`, 'info', 2000);
-    } else {
-      $('stock-form-title').innerText = 'New Medicine';
-      $('st-name').value = ''; $('st-batch').value = '';
-      $('st-mfg').value = ''; $('st-exp').value = '';
-      $('st-qty').value = ''; $('st-price').value = '';
-      $('st-mrp').value = ''; $('st-tax').value = settings.taxRate || '';
-      $('btn-delete-stock').style.display = 'none';
-      lookupProductName(cleanCode);
-    }
-    updateExpHint();
-    $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    $('st-name').focus();
+    if (matches.length > 1) { openBatchPicker(cleanCode, matches, 'stock'); return; }
+    if (matches.length === 1) { openStockFormForEdit(matches[0]); }
+    else { openStockFormForNewBatch(cleanCode); }
   }
+}
+// Runs the stock/expiry checks and adds the chosen batch to the cart. Cart
+// lines are matched by barcode+batch too, since two batches of the same
+// product can have different prices/expiries and must stay distinct.
+function sellFromBatch(item) {
+  if (settings.blockExpired && item.exp) {
+    const d = daysUntil(item.exp);
+    if (d !== null && d < 0) { playError(); toast(`${item.name} has expired (Batch ${item.batch || 'N/A'}). Sale blocked.`, 'error', 4200); return; }
+  }
+  const cartItem = cart.find(c => c.barcode === item.barcode && (c.batch || '') === (item.batch || ''));
+  if (cartItem) {
+    if (cartItem.qty < item.qty) { cartItem.qty++; playAdd(); }
+    else { playError(); toast('Stock limit reached for this item.', 'warn'); return; }
+  } else { cart.push({ ...item, qty: 1 }); playSuccess(); }
+  toast(`${item.name} added to cart`, 'success', 1600);
+  renderUI();
+}
+// Opens the stock form pre-filled to edit a specific existing batch.
+function openStockFormForEdit(existing) {
+  editingBarcode = existing.barcode; editingBatch = existing.batch || '';
+  $('add-stock-form').style.display = 'block';
+  $('stock-form-title').innerText = 'Edit Batch';
+  $('st-code').value = existing.barcode;
+  $('st-name').value = existing.name; $('st-batch').value = existing.batch;
+  $('st-mfg').value = existing.mfg; $('st-exp').value = existing.exp;
+  $('st-qty').value = existing.qty; $('st-price').value = existing.price;
+  $('st-mrp').value = existing.mrp != null ? existing.mrp : existing.price;
+  $('st-tax').value = existing.taxPct != null ? existing.taxPct : settings.taxRate;
+  $('btn-delete-stock').style.display = 'flex';
+  toast(`Editing existing batch: ${existing.name} (Batch ${existing.batch || 'N/A'})`, 'info', 2000);
+  updateExpHint();
+  $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('st-name').focus();
+}
+// Opens the stock form blank (barcode pre-filled) to add a brand-new batch —
+// used both for a barcode with no inventory yet, and for adding an
+// additional batch to a barcode that already has other batches in stock.
+function openStockFormForNewBatch(barcode) {
+  editingBarcode = null; editingBatch = null;
+  $('add-stock-form').style.display = 'block';
+  $('st-code').value = barcode;
+  const known = batchesForBarcode(barcode)[0];
+  $('stock-form-title').innerText = known ? 'Add New Batch' : 'New Medicine';
+  $('st-name').value = known ? known.name : ''; $('st-batch').value = '';
+  $('st-mfg').value = ''; $('st-exp').value = '';
+  $('st-qty').value = ''; $('st-price').value = known ? known.price : '';
+  $('st-mrp').value = known ? (known.mrp != null ? known.mrp : known.price) : '';
+  $('st-tax').value = known ? (known.taxPct != null ? known.taxPct : settings.taxRate) : (settings.taxRate || '');
+  $('btn-delete-stock').style.display = 'none';
+  if (!known) lookupProductName(barcode);
+  updateExpHint();
+  $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('st-name').focus();
+}
+// Batch picker modal — used both when billing a barcode with more than one
+// in-stock batch (pharmacist picks which physical stock to sell) and when
+// scanning/opening a barcode that already has multiple batches for editing.
+function openBatchPicker(barcode, matches, mode) {
+  batchPickerMode = mode; batchPickerBarcode = barcode;
+  $('batch-picker-title').innerText = (mode === 'bill' ? 'Select batch to sell — ' : 'Select batch to edit — ') + matches[0].name;
+  $('batch-picker-list').innerHTML = matches.map(i => `
+    <div class="card clickable" onclick="handleBatchPick('${String(i.batch || '').replace(/'/g, "\\'")}')">
+      <div class="card-col"><div class="card-title">Batch: ${escapeHtml(i.batch || 'N/A')}</div>
+        <div class="card-sub"><span class="badge">Exp: ${escapeHtml(i.exp || 'N/A')}</span><span class="badge">Qty: ${i.qty}</span></div>
+      </div>
+    </div>`).join('');
+  $('batch-picker-newbatch-btn').style.display = mode === 'stock' ? 'block' : 'none';
+  $('batch-picker-backdrop').classList.add('show');
+}
+function closeBatchPicker() { $('batch-picker-backdrop').classList.remove('show'); batchPickerMode = null; batchPickerBarcode = null; }
+function handleBatchPick(batch) {
+  const barcode = batchPickerBarcode, mode = batchPickerMode;
+  const item = findInventoryItem(barcode, batch);
+  closeBatchPicker();
+  if (!item) return;
+  if (mode === 'bill') sellFromBatch(item); else openStockFormForEdit(item);
+}
+function addNewBatchFromPicker() {
+  const barcode = batchPickerBarcode;
+  closeBatchPicker();
+  openStockFormForNewBatch(barcode);
 }
 async function lookupProductName(barcode) {
   const nameField = $('st-name');
@@ -499,7 +565,7 @@ async function lookupProductName(barcode) {
   finally { nameField.placeholder = originalPlaceholder; }
 }
 function openAddStockForm() {
-  editingBarcode = null;
+  editingBarcode = null; editingBatch = null;
   $('add-stock-form').style.display = 'block';
   $('stock-form-title').innerText = 'New Medicine';
   ['st-code', 'st-name', 'st-batch', 'st-mfg', 'st-exp', 'st-qty', 'st-price', 'st-mrp', 'st-tax'].forEach(id => $(id).value = '');
@@ -509,7 +575,7 @@ function openAddStockForm() {
   $('add-stock-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   $('st-code').focus();
 }
-function closeStockForm() { $('add-stock-form').style.display = 'none'; editingBarcode = null; }
+function closeStockForm() { $('add-stock-form').style.display = 'none'; editingBarcode = null; editingBatch = null; }
 document.addEventListener('input', (e) => { if (e.target && e.target.id === 'st-exp') updateExpHint(); });
 function updatePriceHint() {
   const mrp = parseFloat($('st-mrp').value), price = parseFloat($('st-price').value);
@@ -549,10 +615,10 @@ async function saveStock() {
   if (!barcode) { toast('Barcode is required — scan or type one.', 'error'); return; }
   if (!valid) { toast('Please fix the highlighted fields.', 'error'); return; }
   const newItem = { barcode, name, batch, mfg, exp, qty, price, mrp, taxPct };
-  const idx = inventory.findIndex(i => i.barcode === barcode);
+  const idx = inventory.findIndex(i => i.barcode === barcode && (i.batch || '') === (batch || ''));
   if (idx > -1) inventory[idx] = newItem; else inventory.push(newItem);
   saveLocalInventory();
-  pending.inventory[barcode] = true; savePending();
+  pending.inventory[invKey(barcode, batch)] = true; savePending();
   renderUI();
   closeStockForm();
   toast('Saved to inventory', 'success');
@@ -561,16 +627,16 @@ async function saveStock() {
   if (!ok) toast('Saved locally. Will sync when online.', 'warn', 3000);
 }
 async function deleteStockConfirm() {
-  const item = inventory.find(i => i.barcode === editingBarcode);
+  const item = findInventoryItem(editingBarcode, editingBatch);
   if (!item) return;
-  const ok = await confirmDialog({ title: 'Remove this medicine?', message: `${item.name} will be permanently removed from inventory.`, confirmText: 'Remove', danger: true });
+  const ok = await confirmDialog({ title: 'Remove this batch?', message: `${item.name} (Batch ${item.batch || 'N/A'}) will be permanently removed from inventory.`, confirmText: 'Remove', danger: true });
   if (!ok) return;
-  inventory = inventory.filter(i => i.barcode !== editingBarcode);
+  inventory = inventory.filter(i => !(i.barcode === editingBarcode && (i.batch || '') === (editingBatch || '')));
   saveLocalInventory();
-  delete pending.inventory[editingBarcode]; savePending();
-  deleteInventoryCloud(editingBarcode);
+  delete pending.inventory[invKey(editingBarcode, editingBatch)]; savePending();
+  deleteInventoryCloud(editingBarcode, editingBatch);
   closeStockForm(); renderUI();
-  toast('Medicine removed', 'success');
+  toast('Batch removed', 'success');
 }
 function setStockFilter(f) {
   stockFilter = f;
@@ -593,12 +659,12 @@ function computeStockStatus(item) {
 /* =========================================
    CART
    ========================================= */
-function updateCartQty(barcode, delta) {
-  const idx = cart.findIndex(c => c.barcode === barcode);
+function updateCartQty(barcode, batch, delta) {
+  const idx = cart.findIndex(c => c.barcode === barcode && (c.batch || '') === (batch || ''));
   if (idx > -1) {
     if (delta === -9999) cart.splice(idx, 1);
     else {
-      const inv = inventory.find(i => i.barcode === barcode);
+      const inv = findInventoryItem(barcode, batch);
       const newQty = cart[idx].qty + delta;
       if (newQty <= 0) cart.splice(idx, 1);
       else if (inv && newQty > inv.qty) { toast('Exceeds available stock!', 'warn'); return; }
@@ -645,12 +711,12 @@ async function generateInvoice() {
   const custPhone = $('cust-phone').value.trim() || 'N/A';
   const totals = computeCartTotals();
   for (const c of cart) {
-    const inv = inventory.find(i => i.barcode === c.barcode);
+    const inv = findInventoryItem(c.barcode, c.batch);
     if (!inv || inv.qty < c.qty) { toast(`Not enough stock for ${c.name}. Please refresh cart.`, 'error'); return; }
   }
-  cart.forEach(c => { const inv = inventory.find(i => i.barcode === c.barcode); if (inv) inv.qty -= c.qty; });
+  cart.forEach(c => { const inv = findInventoryItem(c.barcode, c.batch); if (inv) inv.qty -= c.qty; });
   saveLocalInventory();
-  cart.forEach(c => { pending.inventory[c.barcode] = true; });
+  cart.forEach(c => { pending.inventory[invKey(c.barcode, c.batch)] = true; });
   savePending();
 
   const id = nextInvoiceId();
@@ -667,7 +733,7 @@ async function generateInvoice() {
   switchTab('invoices');
 
   const invOk = await syncInvoiceRow(invoice);
-  for (const c of invoice.items) { const item = inventory.find(i => i.barcode === c.barcode); if (item) await syncInventoryItem(item); }
+  for (const c of invoice.items) { const item = findInventoryItem(c.barcode, c.batch); if (item) await syncInventoryItem(item); }
   updateSyncIndicator();
   if (!invOk) toast('Invoice saved locally. Will sync when online.', 'warn', 3500);
 }
@@ -1035,12 +1101,13 @@ function renderUI() {
       <div class="card">
         <div class="card-col"><div class="card-title">${escapeHtml(i.name)}</div>
           <div class="card-sub">${i.mrp > i.price ? `<span class="mono" style="text-decoration:line-through;color:var(--muted-2);">${fmtMoney(i.mrp)}</span>` : ''}<span class="mono">${fmtMoney(i.price)}</span>${i.taxPct ? `<span class="badge" style="background:var(--green-soft);color:var(--green-dark);">${i.taxPct}% GST</span>` : ''}</div>
+          ${i.batch ? `<div class="card-sub"><span class="badge">Batch: ${escapeHtml(i.batch)}</span></div>` : ''}
         </div>
         <div class="qty-stepper">
-          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', -1)">-</button>
+          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', '${String(i.batch || '').replace(/'/g, "\\'")}', -1)">-</button>
           <div class="qty-input-inline">${i.qty}</div>
-          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', 1)">+</button>
-          <button class="btn-qty btn-del" onclick="updateCartQty('${i.barcode}', -9999)">×</button>
+          <button class="btn-qty" onclick="updateCartQty('${i.barcode}', '${String(i.batch || '').replace(/'/g, "\\'")}', 1)">+</button>
+          <button class="btn-qty btn-del" onclick="updateCartQty('${i.barcode}', '${String(i.batch || '').replace(/'/g, "\\'")}', -9999)">×</button>
         </div>
       </div>`).join('');
     const totals = computeCartTotals();
@@ -1067,7 +1134,7 @@ function renderUI() {
   $('stock-list').innerHTML = filtered.length ? filtered.map(i => {
     const status = computeStockStatus(i);
     const disc = discPctOf(i);
-    return `<div class="card clickable ${status.strip}" onclick="processBarcode('${i.barcode.replace(/'/g, "\\'")}', 'stock')">
+    return `<div class="card clickable ${status.strip}" onclick="openStockFormForEdit(findInventoryItem('${i.barcode.replace(/'/g, "\\'")}', '${String(i.batch || '').replace(/'/g, "\\'")}'))">
       <div class="card-col"><div class="card-title">${escapeHtml(i.name)}</div>
         <div class="card-sub"><span class="badge">Batch: ${escapeHtml(i.batch || 'N/A')}</span><span class="badge">Exp: ${escapeHtml(i.exp || 'N/A')}</span><span class="badge ${status.cls}">${status.label}</span></div>
         <div class="card-sub">${i.mrp > i.price ? `<span class="mono" style="text-decoration:line-through;color:var(--muted-2);">${fmtMoney(i.mrp)}</span>` : ''}<span class="badge" style="background:var(--green-soft);color:var(--green-dark);">${i.taxPct || 0}% GST</span>${disc > 0 ? `<span class="badge badge-ok">${disc}% off</span>` : ''}</div>
