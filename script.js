@@ -524,13 +524,24 @@ function openStockFormForNewBatch(barcode) {
 // scanning/opening a barcode that already has multiple batches for editing.
 function openBatchPicker(barcode, matches, mode) {
   batchPickerMode = mode; batchPickerBarcode = barcode;
+  // Soonest expiry first — a gentle FIFO nudge. Still just a suggestion:
+  // the pharmacist picks, nothing is auto-selected.
+  const sorted = [...matches].sort((a, b) => {
+    const da = a.exp ? daysUntil(a.exp) : Infinity, db = b.exp ? daysUntil(b.exp) : Infinity;
+    return da - db;
+  });
   $('batch-picker-title').innerText = (mode === 'bill' ? 'Select batch to sell — ' : 'Select batch to edit — ') + matches[0].name;
-  $('batch-picker-list').innerHTML = matches.map(i => `
-    <div class="card clickable" onclick="handleBatchPick('${String(i.batch || '').replace(/'/g, "\\'")}')">
-      <div class="card-col"><div class="card-title">Batch: ${escapeHtml(i.batch || 'N/A')}</div>
-        <div class="card-sub"><span class="badge">Exp: ${escapeHtml(i.exp || 'N/A')}</span><span class="badge">Qty: ${i.qty}</span></div>
+  $('batch-picker-list').innerHTML = sorted.map((i, idx) => {
+    const status = computeStockStatus(i);
+    const d = i.exp ? daysUntil(i.exp) : null;
+    const expText = !i.exp ? 'No expiry set' : d < 0 ? `Expired ${Math.abs(d)}d ago` : `Expires in ${d}d`;
+    const recommended = mode === 'bill' && idx === 0 && i.exp;
+    return `<div class="card clickable ${status.strip}" onclick="handleBatchPick('${String(i.batch || '').replace(/'/g, "\\'")}')">
+      <div class="card-col"><div class="card-title">Batch: ${escapeHtml(i.batch || 'N/A')}${recommended ? ' <span class="badge badge-ok">Recommended — sell first</span>' : ''}</div>
+        <div class="card-sub"><span class="badge ${status.cls}">${escapeHtml(expText)}</span><span class="badge">Qty: ${i.qty}</span></div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   $('batch-picker-newbatch-btn').style.display = mode === 'stock' ? 'block' : 'none';
   $('batch-picker-backdrop').classList.add('show');
 }
