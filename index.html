@@ -19,7 +19,7 @@
 
 <!-- ================= AUTH SCREEN ================= -->
 <div id="auth-screen">
-  <div class="auth-card">
+  <div class="auth-card glass">
     <div class="auth-head">
       <img class="logo-img lg" style="margin:0 auto;" src="Logo.png" alt="EkPharma">
       <div class="tagline">Your Pharmacy. One Solution</div>
@@ -75,22 +75,22 @@
   </div>
 
   <div class="stat-grid">
-    <div class="stat-card">
+    <div class="stat-card glass">
       <div class="stat-icon green"><span class="material-symbols-rounded" style="font-size:15px;">trending_up</span></div>
       <div class="stat-label">Today's Sales</div>
       <div class="stat-value" id="stat-today-sales">₹0.00</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card glass">
       <div class="stat-icon blue"><span class="material-symbols-rounded" style="font-size:15px;">inventory_2</span></div>
       <div class="stat-label">Inventory Value</div>
       <div class="stat-value" id="stat-inv-value">₹0.00</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card glass">
       <div class="stat-icon amber"><span class="material-symbols-rounded" style="font-size:15px;">error</span></div>
       <div class="stat-label">Low Stock</div>
       <div class="stat-value" id="stat-low-stock">0</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card glass">
       <div class="stat-icon red"><span class="material-symbols-rounded" style="font-size:15px;">schedule</span></div>
       <div class="stat-label">Expiring Soon</div>
       <div class="stat-value" id="stat-expiring">0</div>
@@ -146,7 +146,7 @@
   <div class="section-label">Cart Items <span id="cart-count" class="badge"></span></div>
   <div id="cart-list"></div>
 
-  <div id="cart-summary" style="display:none;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;">
+  <div id="cart-summary" class="glass cart-summary" style="display:none;margin-top:16px;border-radius:var(--r-lg);padding:16px;">
     <div class="input-group" style="margin-bottom:10px;"><label>Additional Discount (₹)</label><input type="number" id="cart-discount" min="0" step="0.01" placeholder="0.00" oninput="renderUI()"></div>
     <div class="pay-row" id="pay-row">
       <div class="pay-chip active" data-pay="Cash" onclick="setPaymentMethod('Cash')">Cash</div>
@@ -440,7 +440,7 @@
 <div id="toast-container"></div>
 
 <div class="modal-backdrop" id="confirm-backdrop">
-  <div class="modal-sheet">
+  <div class="modal-sheet glass">
     <h3 id="confirm-title">Are you sure?</h3>
     <p id="confirm-message"></p>
     <div class="btn-row">
@@ -451,7 +451,7 @@
 </div>
 
 <div class="modal-backdrop" id="batch-picker-backdrop">
-  <div class="modal-sheet">
+  <div class="modal-sheet glass">
     <h3 id="batch-picker-title">Select batch</h3>
     <div id="batch-picker-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
     <button class="btn btn-outline btn-sm" id="batch-picker-newbatch-btn" style="width:100%;margin-bottom:10px;" onclick="addNewBatchFromPicker()">+ Add New Batch</button>
