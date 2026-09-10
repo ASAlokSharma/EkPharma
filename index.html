@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#FAF9F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>EkPharma</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="auth-screen">
+  <div class="auth-card glass">
+    <div class="auth-head">
+      <img class="logo-img lg" style="margin:0 auto;" src="Logo.png" alt="EkPharma">
+      <div class="tagline">Your Pharmacy. One Solution</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="setAuthMode('login')">Log in</div>
+      <div class="auth-tab" id="tab-signup" onclick="setAuthMode('signup')">Sign up</div>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-note" id="auth-note"></div>
+    <div class="input-group auth-field" id="field-pharmacy-name" style="display:none;">
+      <label>Pharmacy name</label>
+      <input type="text" id="auth-pharmacy-name" placeholder="e.g. Sharma Medical Store">
+    </div>
+    <div class="input-group auth-field">
+      <label>Email</label>
+      <input type="email" id="auth-email" placeholder="you@pharmacy.com" autocomplete="username">
+    </div>
+    <div class="input-group auth-field">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="At least 6 characters" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" id="auth-submit-btn" onclick="handleAuthSubmit()">Log in</button>
+    <div class="auth-foot" id="auth-foot">Each pharmacy's data is completely private — you'll only ever see your own inventory, bills and invoices.</div>
+  </div>
+</div>
+
+<!-- ================= APP ROOT ================= -->
+<div id="app-root">
+
+<div id="offline-banner">You're offline — changes are saved on this device and will sync automatically</div>
+
+<div class="appbar">
+  <div class="brand-row">
+    <img class="logo-img" src="Logo.png" alt="EkPharma">
+    <div class="brand-text">
+      <div class="sync-row"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Live</span></div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="openSettings()" aria-label="Settings">
+      <span class="material-symbols-rounded" style="font-size:18px;">settings</span>
+    </button>
+  </div>
+</div>
+
+<!-- HOME -->
+<section id="screen-home" class="screen active">
+  <div class="greeting-card">
+    <div class="g-hello">Dashboard</div>
+    <div class="g-name" id="home-biz-name">Welcome back</div>
+    <div class="g-date" id="home-date-sub">Here's what's happening today.</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card glass">
+      <div class="stat-icon green"><span class="material-symbols-rounded" style="font-size:15px;">trending_up</span></div>
+      <div class="stat-label">Today's Sales</div>
+      <div class="stat-value" id="stat-today-sales">₹0.00</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-icon blue"><span class="material-symbols-rounded" style="font-size:15px;">inventory_2</span></div>
+      <div class="stat-label">Inventory Value</div>
+      <div class="stat-value" id="stat-inv-value">₹0.00</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-icon amber"><span class="material-symbols-rounded" style="font-size:15px;">error</span></div>
+      <div class="stat-label">Low Stock</div>
+      <div class="stat-value" id="stat-low-stock">0</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-icon red"><span class="material-symbols-rounded" style="font-size:15px;">schedule</span></div>
+      <div class="stat-label">Expiring Soon</div>
+      <div class="stat-value" id="stat-expiring">0</div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <div class="qa-btn" onclick="switchTab('bill')">
+      <div class="qa-icon"><span class="material-symbols-rounded" style="font-size:18px;">add</span></div>
+      <div>New Bill</div>
+    </div>
+    <div class="qa-btn" onclick="switchTab('stock'); setTimeout(()=>startScanner('stock'), 250)">
+      <div class="qa-icon"><span class="material-symbols-rounded" style="font-size:18px;">add_box</span></div>
+      <div>Add Stock</div>
+    </div>
+  </div>
+
+  <div class="section-label">Alerts</div>
+  <div class="alert-row">
+    <div class="alert-chip" onclick="switchTab('stock'); setStockFilter('low')">
+      <div class="a-icon amber"><span class="material-symbols-rounded" style="font-size:15px;">error</span></div>
+      <div><div class="a-num" id="alert-low-count">0</div><div class="a-lbl">Low stock items</div></div>
+    </div>
+    <div class="alert-chip" onclick="switchTab('stock'); setStockFilter('expiring')">
+      <div class="a-icon red"><span class="material-symbols-rounded" style="font-size:15px;">schedule</span></div>
+      <div><div class="a-num" id="alert-exp-count">0</div><div class="a-lbl">Expiring soon</div></div>
+    </div>
+  </div>
+
+  <div class="section-label">Sales — Last 7 Days</div>
+  <div class="card" style="display:block;"><div id="sales-trend-chart"></div></div>
+
+  <div class="section-label">Recent Invoices <span class="see-all" onclick="switchTab('invoices')">See all</span></div>
+  <div class="card" style="display:block;"><div id="recent-invoices"></div></div>
+</section>
+
+<!-- BILL -->
+<section id="screen-bill" class="screen">
+  <h2 class="page-title">Billing</h2>
+  <p class="page-sub">Scan medicines or add manually to cart.</p>
+
+  <div class="form-grid">
+    <div class="input-group" style="margin-bottom:0;"><input type="text" id="cust-name" placeholder="Customer Name"></div>
+    <div class="input-group" style="margin-bottom:0;"><input type="tel" id="cust-phone" placeholder="Phone Number" inputmode="numeric"></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="startScanner('bill')" style="margin:14px 0;">
+    <span class="material-symbols-rounded" style="font-size:17px;">barcode_scanner</span>
+    Scan Barcode
+  </button>
+  <div class="input-group"><input type="text" id="manual-bill" placeholder="Or enter barcode manually…" onkeypress="if(event.key==='Enter') handleManual('bill')"></div>
+
+  <div class="section-label">Cart Items <span id="cart-count" class="badge"></span></div>
+  <div id="cart-list"></div>
+
+  <div id="cart-summary" class="glass cart-summary" style="display:none;margin-top:16px;border-radius:var(--r-lg);padding:16px;">
+    <div class="input-group" style="margin-bottom:10px;"><label>Additional Discount (₹)</label><input type="number" id="cart-discount" min="0" step="0.01" placeholder="0.00" oninput="renderUI()"></div>
+    <div class="pay-row" id="pay-row">
+      <div class="pay-chip active" data-pay="Cash" onclick="setPaymentMethod('Cash')">Cash</div>
+      <div class="pay-chip" data-pay="Card" onclick="setPaymentMethod('Card')">Card</div>
+      <div class="pay-chip" data-pay="UPI" onclick="setPaymentMethod('UPI')">UPI</div>
+    </div>
+    <div class="summary-row"><span>MRP Total</span><span id="sum-mrp" class="mono">₹0.00</span></div>
+    <div class="summary-row" id="sum-savings-row" style="color:var(--green-dark);"><span>You Save</span><span id="sum-savings" class="mono">₹0.00</span></div>
+    <div class="summary-row"><span>Taxable Value</span><span id="sum-subtotal" class="mono">₹0.00</span></div>
+    <div class="summary-row" id="sum-tax-row"><span id="sum-tax-label">GST</span><span id="sum-tax" class="mono">₹0.00</span></div>
+    <div class="summary-row" id="sum-adjdisc-row"><span>Additional Discount</span><span id="sum-discount" class="mono">-₹0.00</span></div>
+    <div class="summary-row total"><span>Total Amount</span><span id="cart-total" class="price">₹0.00</span></div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="clearCart()" style="flex:0 0 auto;width:auto;padding:14px 16px;">
+        <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+      </button>
+      <button class="btn btn-primary" onclick="generateInvoice()">Complete &amp; Checkout</button>
+    </div>
+  </div>
+</section>
+
+<!-- STOCK -->
+<section id="screen-stock" class="screen">
+  <h2 class="page-title">Inventory</h2>
+  <p class="page-sub">Add and manage medical inventory.</p>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startScanner('stock')">
+      <span class="material-symbols-rounded" style="font-size:17px;">barcode_scanner</span>
+      Scan Barcode
+    </button>
+    <button class="btn btn-outline" style="flex:0 0 auto;width:auto;padding:14px 16px;" onclick="openAddStockForm()" title="Add new item">
+      <span class="material-symbols-rounded" style="font-size:18px;">add</span>
+    </button>
+  </div>
+
+  <div class="input-group" style="margin-top:12px;"><input type="text" id="manual-stock" placeholder="Or enter barcode manually…" onkeypress="if(event.key==='Enter') handleManual('stock')"></div>
+
+  <div id="add-stock-form" style="display:none;margin-top:16px;background:var(--surface);padding:16px;border-radius:var(--r-lg);border:1px solid var(--border);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h3 style="font-size:16px;font-weight:800;" id="stock-form-title">Medicine Details</h3>
+      <button class="icon-btn" style="width:30px;height:30px;" onclick="closeStockForm()" aria-label="Close">
+        <span class="material-symbols-rounded" style="font-size:14px;">close</span>
+      </button>
+    </div>
+    <div class="input-group"><label>Barcode</label><input type="text" id="st-code" placeholder="Scan or type barcode"></div>
+    <div class="input-group">
+      <label>Medicine Name</label>
+      <input type="text" id="st-name" placeholder="e.g. Paracetamol 500mg">
+      <div class="err-msg" id="err-st-name">Medicine name is required.</div>
+    </div>
+    <div class="input-group"><label>Batch Number</label><input type="text" id="st-batch" placeholder="e.g. BATCH-102"></div>
+    <div class="form-grid">
+      <div class="input-group" style="margin-bottom:0;"><label>Mfg Date</label><input type="date" id="st-mfg"></div>
+      <div class="input-group" style="margin-bottom:0;"><label>Expiry Date</label><input type="date" id="st-exp"></div>
+    </div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:14px;" id="exp-hint"></div>
+    <div class="form-grid">
+      <div class="input-group" style="margin-bottom:0;"><label>Quantity</label><input type="number" id="st-qty" min="0" placeholder="0"><div class="err-msg" id="err-st-qty">Enter a valid quantity.</div></div>
+      <div class="input-group" style="margin-bottom:0;"><label>MRP (₹)</label><input type="number" id="st-mrp" step="0.01" min="0" placeholder="0.00" oninput="updatePriceHint()"><div class="err-msg" id="err-st-mrp">Enter a valid MRP.</div></div>
+    </div>
+    <div class="form-grid" style="margin-top:12px;">
+      <div class="input-group" style="margin-bottom:0;"><label>Selling Price (₹)</label><input type="number" id="st-price" step="0.01" min="0" placeholder="0.00" oninput="updatePriceHint()"><div class="err-msg" id="err-st-price">Enter a valid price.</div></div>
+      <div class="input-group" style="margin-bottom:0;"><label>GST / Tax (%)</label><input type="number" id="st-tax" step="0.1" min="0" placeholder="0"></div>
+    </div>
+    <div class="hint" style="margin-top:8px;" id="price-hint"></div>
+    <div style="height:14px;"></div>
+    <div class="btn-row">
+      <button class="btn btn-danger-outline" style="flex:0 0 auto;width:auto;padding:14px 16px;display:none;" id="btn-delete-stock" onclick="deleteStockConfirm()">
+        <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+      </button>
+      <button class="btn btn-primary" onclick="saveStock()">Save to Inventory</button>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:20px;">Current Stock</div>
+  <div class="search-wrap" style="margin-bottom:10px;">
+    <span class="material-symbols-rounded" style="font-size:16px;">search</span>
+    <input type="text" id="stock-search" placeholder="Search by name, barcode or batch…" oninput="renderUI()">
+  </div>
+  <div class="chip-row" style="margin-bottom:14px;">
+    <div class="chip active" data-filter="all" onclick="setStockFilter('all')">All</div>
+    <div class="chip" data-filter="low" onclick="setStockFilter('low')">Low Stock</div>
+    <div class="chip" data-filter="expiring" onclick="setStockFilter('expiring')">Expiring Soon</div>
+    <div class="chip" data-filter="expired" onclick="setStockFilter('expired')">Expired</div>
+  </div>
+  <div id="stock-list"></div>
+</section>
+
+<!-- ANALYTICS -->
+<section id="screen-analytics" class="screen">
+  <h2 class="page-title">Analytics</h2>
+  <p class="page-sub">Trends and performance at a glance.</p>
+
+  <div class="an-summary-row">
+    <div class="an-summary-card"><div class="as-label">Today</div><div class="as-value" id="an-rev-today">₹0</div></div>
+    <div class="an-summary-card"><div class="as-label">This Week</div><div class="as-value" id="an-rev-week">₹0</div></div>
+    <div class="an-summary-card"><div class="as-label">This Month</div><div class="as-value" id="an-rev-month">₹0</div></div>
+  </div>
+
+  <div class="section-label">Revenue — Last 7 Days</div>
+  <div class="card" style="display:block;"><div id="an-trend-chart"></div></div>
+
+  <div class="section-label">Top Selling Medicines</div>
+  <div class="card" style="display:block;"><div id="an-top-items"></div></div>
+
+  <div class="section-label">Payment Methods</div>
+  <div class="card" style="display:block;">
+    <div class="split-bar" id="an-split-bar"></div>
+    <div class="split-legend" id="an-split-legend"></div>
+  </div>
+
+  <div class="section-label">Inventory Health</div>
+  <div class="health-grid">
+    <div class="health-cell"><div class="hc-num" id="an-health-total">0</div><div class="hc-lbl">Total items</div></div>
+    <div class="health-cell"><div class="hc-num" id="an-health-low" style="color:var(--amber);">0</div><div class="hc-lbl">Low stock</div></div>
+    <div class="health-cell"><div class="hc-num" id="an-health-expiring" style="color:var(--amber);">0</div><div class="hc-lbl">Expiring</div></div>
+    <div class="health-cell"><div class="hc-num" id="an-health-expired" style="color:var(--red);">0</div><div class="hc-lbl">Expired</div></div>
+  </div>
+</section>
+
+<!-- INVOICES -->
+<section id="screen-invoices" class="screen">
+  <div id="invoice-list-view">
+    <h2 class="page-title">Invoices</h2>
+    <p class="page-sub">View completed transactions and download PDF receipts.</p>
+    <div class="search-wrap" style="margin-bottom:14px;">
+      <span class="material-symbols-rounded" style="font-size:16px;">search</span>
+      <input type="text" id="invoice-search" placeholder="Search by name, phone or invoice ID…" oninput="renderUI()">
+    </div>
+    <div id="invoice-list"></div>
+  </div>
+
+  <div id="invoice-detail-view">
+    <button class="btn btn-outline btn-sm" style="margin-bottom:16px;" onclick="hideInvoiceDetail()">← Back</button>
+    <div class="detail-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><h3 style="font-size:20px;font-weight:800;" id="det-id"></h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px;" id="det-date"></p></div>
+        <span class="badge" id="det-pay"></span>
+      </div>
+      <div style="background:var(--surface-tint);padding:10px 12px;border-radius:var(--r-md);margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Customer</div>
+        <div style="font-weight:700;" id="det-cust-name"></div>
+        <div style="color:var(--muted);font-size:13px;" id="det-cust-phone"></div>
+      </div>
+      <table class="detail-table">
+        <thead><tr><th>Item</th><th style="text-align:right">MRP</th><th style="text-align:right">Rate</th><th style="text-align:right">Qty</th><th style="text-align:right">GST%</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody id="det-items"></tbody>
+      </table>
+      <div class="summary-row"><span>MRP Total</span><span id="det-mrp" class="mono"></span></div>
+      <div class="summary-row" id="det-savings-row" style="color:var(--green-dark);"><span>You Saved</span><span id="det-savings" class="mono"></span></div>
+      <div class="summary-row"><span>Taxable Value</span><span id="det-subtotal" class="mono"></span></div>
+      <div class="summary-row" id="det-tax-row"><span>GST</span><span id="det-tax" class="mono"></span></div>
+      <div class="summary-row" id="det-discount-row"><span>Additional Discount</span><span id="det-discount" class="mono"></span></div>
+      <div class="summary-row total"><span>Total</span><span class="price">₹<span id="det-total"></span></span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="deleteInvoiceConfirm()">
+        <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+      </button>
+      <button class="btn btn-primary" id="btn-download-pdf">Download PDF Receipt</button>
+    </div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<div id="screen-settings">
+  <div class="settings-topbar">
+    <button class="icon-btn" onclick="closeSettings()" aria-label="Back">
+      <span class="material-symbols-rounded" style="font-size:18px;">arrow_back</span>
+    </button>
+    <h2>Settings</h2>
+  </div>
+  <div class="settings-body">
+    <div class="settings-group">
+      <h4>Pharmacy Profile</h4>
+      <div class="input-group" style="margin-top:2px;"><label>Business Name</label><input type="text" id="set-biz-name" placeholder="EkPharma"></div>
+      <div class="input-group"><label>Pharmacist / License</label><input type="text" id="set-license" placeholder="Reg: DL-XXXXXX"></div>
+      <div class="input-group"><label>GST Number</label><input type="text" id="set-gst" placeholder="Optional"></div>
+      <div class="input-group" style="margin-bottom:0;"><label>Address / Phone</label><input type="text" id="set-address" placeholder="Shop address, contact number"></div>
+    </div>
+
+    <div class="settings-group">
+      <h4>Billing</h4>
+      <div class="form-grid" style="margin-bottom:0;">
+        <div class="input-group" style="margin-bottom:0;"><label>Tax / GST Rate (%)</label><input type="number" id="set-tax-rate" min="0" step="0.1" placeholder="0"></div>
+        <div class="input-group" style="margin-bottom:0;"><label>Currency Symbol</label><input type="text" id="set-currency" placeholder="₹" maxlength="3"></div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h4>Inventory Alerts</h4>
+      <div class="form-grid" style="margin-bottom:0;">
+        <div class="input-group" style="margin-bottom:0;"><label>Low Stock Threshold</label><input type="number" id="set-low-stock" min="0" placeholder="10"></div>
+        <div class="input-group" style="margin-bottom:0;"><label>Expiry Warning (days)</label><input type="number" id="set-exp-days" min="0" placeholder="90"></div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h4>Preferences</h4>
+      <div class="toggle-row">
+        <div><div class="lbl">Sound on Scan</div><div class="desc">Play a short tone when a barcode scan succeeds or fails</div></div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="set-sound-enabled" checked>
+          <span class="track"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:10px;">
+        <div><div class="lbl">Block Expired Sales</div><div class="desc">Prevent billing items past their expiry date</div></div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="set-block-expired" checked>
+          <span class="track"></span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveSettingsForm()">Save Settings</button>
+
+    <div class="settings-group" style="margin-top:20px;">
+      <h4>Account</h4>
+      <div class="toggle-row" style="margin-bottom:12px;">
+        <div><div class="lbl" id="settings-sync-label">Live</div><div class="desc" id="settings-sync-desc">All data syncs across every device in real time.</div></div>
+        <span class="sync-dot" id="settings-sync-dot"></span>
+      </div>
+      <div class="hint" style="margin-bottom:12px;" id="account-email-hint"></div>
+      <button class="btn btn-outline btn-sm" onclick="manualSync()" style="width:100%;margin-bottom:10px;">Retry Sync Now</button>
+      <button class="btn btn-danger-outline btn-sm" style="width:100%;" onclick="handleLogout()">Log Out</button>
+    </div>
+
+    <div class="settings-group">
+      <h4>Data Management</h4>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:10px;" onclick="exportInventoryCSV()">Export Inventory (CSV)</button>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:10px;" onclick="exportInvoicesCSV()">Export Invoices (CSV)</button>
+      <button class="btn btn-outline btn-sm" style="width:100%;" onclick="exportSalesDetailCSV()">Export Sales Detail (CSV)</button>
+    </div>
+
+    <p class="hint" style="text-align:center;margin-top:10px;">EkPharma · v4.0</p>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="nav">
+  <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">home</span></div>
+    Home
+  </div>
+  <div class="nav-item" onclick="switchTab('bill')" id="nav-bill">
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">shopping_cart</span></div>
+    Bill
+  </div>
+  <div class="nav-item" onclick="switchTab('stock')" id="nav-stock">
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">inventory_2</span></div>
+    Stock
+  </div>
+  <div class="nav-item" onclick="switchTab('analytics')" id="nav-analytics">
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">bar_chart</span></div>
+    Analytics
+  </div>
+  <div class="nav-item" onclick="switchTab('invoices')" id="nav-invoices">
+    <div class="nav-pill"><span class="material-symbols-rounded" style="font-size:19px;">description</span></div>
+    Invoices
+  </div>
+</div>
+
+<!-- Scanner -->
+<div id="scanner-container">
+  <div class="scanner-topbar">
+    <button class="icon-btn" onclick="stopScanner()" aria-label="Close scanner">
+      <span class="material-symbols-rounded" style="font-size:18px;">close</span>
+    </button>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="torch-btn" style="display:none;" onclick="toggleTorch()" aria-label="Toggle flash">
+        <span class="material-symbols-rounded" style="font-size:16px;">bolt</span>
+      </button>
+      <button class="icon-btn" id="camera-switch-btn" style="display:none;" onclick="switchCamera()" aria-label="Switch camera">
+        <span class="material-symbols-rounded" style="font-size:16px;">cameraswitch</span>
+      </button>
+    </div>
+  </div>
+  <div id="reader"></div>
+  <div class="scanner-hint" id="scanner-hint">Align barcode within frame</div>
+  <div class="scanner-error" id="scanner-error"></div>
+  <div class="scanner-controls">
+    <div class="scanner-manual">
+      <input type="text" id="scanner-manual-input" placeholder="Type barcode instead…" onkeypress="if(event.key==='Enter') handleScannerManual()">
+      <button class="btn btn-primary" style="width:auto;padding:12px 18px;" onclick="handleScannerManual()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<div class="modal-backdrop" id="confirm-backdrop">
+  <div class="modal-sheet glass">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-message"></p>
+    <div class="btn-row">
+      <button class="btn btn-outline" id="confirm-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="batch-picker-backdrop">
+  <div class="modal-sheet glass">
+    <h3 id="batch-picker-title">Select batch</h3>
+    <div id="batch-picker-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+    <button class="btn btn-outline btn-sm" id="batch-picker-newbatch-btn" style="width:100%;margin-bottom:10px;" onclick="addNewBatchFromPicker()">+ Add New Batch</button>
+    <button class="btn btn-outline" style="width:100%;" onclick="closeBatchPicker()">Cancel</button>
+  </div>
+</div>
+
+</div><!-- /#app-root -->
+
+<script src="script.js"></script>
+</body>
+</html>
